@@ -2,12 +2,12 @@
 {% block title %}Campeonatos – CFO Chess{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2><i class="bi bi-trophy"></i> Campeonatos</h2>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h2 class="mb-0 fw-bold" style="color:var(--navy)"><i class="bi bi-trophy me-2" style="color:var(--amber)"></i>Campeonatos</h2>
   {% if current_user.is_admin %}
-  <a href="{{ url_for('admin.championship_create') }}" class="btn btn-dark">
-    <i class="bi bi-plus-lg"></i> Novo
-  </a>
+  <button class="btn btn-chess" data-bs-toggle="modal" data-bs-target="#createChampModal">
+    <i class="bi bi-plus-lg me-1"></i>Novo Campeonato
+  </button>
   {% endif %}
 </div>
 
@@ -15,40 +15,48 @@
 <div class="row g-3">
   {% for c in championships %}
   <div class="col-md-6 col-lg-4">
-    <div class="card h-100 shadow-sm">
+    <div class="card h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between mb-2">
-          <span class="badge {% if c.format == 'elimination' %}bg-primary{% else %}bg-info text-dark{% endif %}">
-            {{ 'Eliminatório' if c.format == 'elimination' else 'Pontos Corridos' }}
-          </span>
-          <span class="badge {% if c.status == 'draft' %}bg-secondary{% elif c.status == 'active' %}bg-success{% else %}bg-dark{% endif %}">
-            {{ {'draft':'Rascunho','active':'Ativo','finished':'Finalizado'}[c.status] }}
-          </span>
+          {% if c.format == 'elimination' %}
+            <span class="format-badge format-elimination">🏆 Eliminatório</span>
+          {% else %}
+            <span class="format-badge format-round-robin">📊 Pontos Corridos</span>
+          {% endif %}
+          {% if c.status == 'draft' %}<span class="status-badge status-draft">Rascunho</span>
+          {% elif c.status == 'active' %}<span class="status-badge status-active">● Ativo</span>
+          {% else %}<span class="status-badge status-finished">Finalizado</span>{% endif %}
         </div>
-        <h5 class="card-title">{{ c.name }}</h5>
+        <h5 class="card-title fw-bold mt-2" style="color:var(--navy)">{{ c.name }}</h5>
         {% if c.description %}
         <p class="card-text text-muted small">{{ c.description[:100] }}{% if c.description|length > 100 %}…{% endif %}</p>
         {% endif %}
         <div class="text-muted small mb-3">
-          <i class="bi bi-people"></i> {{ c.participants.count() }} participantes
+          <i class="bi bi-people me-1"></i>{{ c.participants.count() }} participantes
         </div>
         {% if c.status == 'finished' and c.winner %}
-        <div class="alert alert-warning py-1 px-2 small mb-2">
-          🏆 Campeão: <strong>{{ c.winner.display_name }}</strong>
+        <div class="d-flex align-items-center gap-2 p-2 rounded mb-2"
+             style="background:var(--amber-light);border:1px solid var(--amber)">
+          <span>🏆</span>
+          <span class="small fw-semibold">{{ c.winner.display_name }}</span>
         </div>
         {% endif %}
       </div>
-      <div class="card-footer bg-transparent d-flex gap-2">
+      <div class="card-footer bg-transparent d-flex gap-2 flex-wrap">
         {% if current_user.is_admin %}
-          <a href="{{ url_for('admin.championship_detail', cid=c.id) }}" class="btn btn-sm btn-dark">
-            <i class="bi bi-gear"></i> Gerenciar
+          <a href="{{ url_for('admin.championship_detail', cid=c.id) }}" class="btn btn-navy btn-sm">
+            <i class="bi bi-gear me-1"></i>Gerenciar
           </a>
         {% endif %}
         {% if c.status != 'draft' %}
           {% if c.format == 'elimination' %}
-            <a href="{{ url_for('championship.bracket', cid=c.id) }}" class="btn btn-sm btn-outline-primary">Ver Chave</a>
+            <a href="{{ url_for('championship.bracket', cid=c.id) }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-diagram-3 me-1"></i>Ver Chave
+            </a>
           {% else %}
-            <a href="{{ url_for('championship.standings', cid=c.id) }}" class="btn btn-sm btn-outline-info">Ver Tabela</a>
+            <a href="{{ url_for('championship.standings', cid=c.id) }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-bar-chart me-1"></i>Ver Tabela
+            </a>
           {% endif %}
         {% endif %}
       </div>
@@ -57,9 +65,78 @@
   {% endfor %}
 </div>
 {% else %}
-<div class="text-center text-muted py-5">
-  <div class="fs-1">♟</div>
-  <p>Nenhum campeonato disponível.</p>
+<div class="text-center py-5 text-muted">
+  <div style="font-size:4rem">♟</div>
+  <h5 class="mt-3">Nenhum campeonato disponível.</h5>
+  {% if current_user.is_admin %}
+  <button class="btn btn-chess mt-2" data-bs-toggle="modal" data-bs-target="#createChampModal">
+    Criar primeiro campeonato
+  </button>
+  {% endif %}
+</div>
+{% endif %}
+
+{# MODAL CRIAR CAMPEONATO (admin) #}
+{% if current_user.is_admin %}
+<div class="modal fade" id="createChampModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Novo Campeonato</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('admin.championship_create') }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nome *</label>
+            <input type="text" name="name" class="form-control" required maxlength="200"
+                   placeholder="Ex: CFO Chess Cup 2025" autofocus />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descrição</label>
+            <textarea name="description" class="form-control" rows="2"
+                      placeholder="Detalhes do campeonato..." maxlength="1000"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Formato *</label>
+            <div class="row g-3 format-card-group">
+              <div class="col-sm-6">
+                <div class="format-card card p-3" data-value="elimination">
+                  <div class="text-center">
+                    <div class="fs-2">🏆</div>
+                    <div class="fw-semibold mt-1">Eliminatório</div>
+                    <small class="text-muted">Chave mata-mata. Perdeu, saiu.</small>
+                    <input type="radio" name="format" value="elimination" class="d-none" required />
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="format-card card p-3" data-value="round_robin">
+                  <div class="text-center">
+                    <div class="fs-2">📊</div>
+                    <div class="fw-semibold mt-1">Pontos Corridos</div>
+                    <small class="text-muted">Todos contra todos. V=3, E=1, D=0.</small>
+                    <input type="radio" name="format" value="round_robin" class="d-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="block_on_inconsistency"
+                   id="blockCheck" checked />
+            <label class="form-check-label small" for="blockCheck">
+              Bloquear avanço automático se houver resultado inconsistente
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-chess"><i class="bi bi-check-lg me-1"></i>Criar Campeonato</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 {% endif %}
 {% endblock %}

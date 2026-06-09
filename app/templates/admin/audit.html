@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}Auditoria – CFO Chess{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h2 class="mb-0 fw-bold" style="color:var(--navy)">
+    <i class="bi bi-journal-text me-2" style="color:var(--amber)"></i>Log de Auditoria
+  </h2>
+  <span class="text-muted small">{{ pagination.total }} registro(s)</span>
+</div>
+
+{# FILTROS #}
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+      <div class="col-sm-6 col-md-3">
+        <label class="form-label small fw-semibold">De</label>
+        <input type="date" name="date_from" class="form-control form-control-sm"
+               value="{{ date_from }}" />
+      </div>
+      <div class="col-sm-6 col-md-3">
+        <label class="form-label small fw-semibold">Até</label>
+        <input type="date" name="date_to" class="form-control form-control-sm"
+               value="{{ date_to }}" />
+      </div>
+      <div class="col-sm-6 col-md-2">
+        <label class="form-label small fw-semibold">Ação</label>
+        <select name="action" class="form-select form-select-sm">
+          <option value="">Todas</option>
+          {% for a in all_actions %}
+          <option value="{{ a }}" {% if a == action_filter %}selected{% endif %}>{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-6 col-md-2">
+        <label class="form-label small fw-semibold">Usuário</label>
+        <input type="text" name="username" class="form-control form-control-sm"
+               value="{{ username_filter }}" placeholder="username" />
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-chess btn-sm flex-grow-1">
+          <i class="bi bi-funnel me-1"></i>Filtrar
+        </button>
+        <a href="{{ url_for('admin.audit_log') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# TABELA #}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Data/Hora</th>
+          <th>Ação</th>
+          <th>Detalhe</th>
+          <th>Usuário</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in pagination.items %}
+        <tr>
+          <td data-label="Data" class="text-muted small text-nowrap">
+            {{ log.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}
+          </td>
+          <td data-label="Ação">
+            <code class="small" style="background:var(--bg);padding:2px 6px;border-radius:4px">{{ log.action }}</code>
+          </td>
+          <td data-label="Detalhe" class="small text-muted">{{ log.detail or '–' }}</td>
+          <td data-label="Usuário">
+            {% if log.user %}
+            <div class="d-flex align-items-center gap-1">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;
+                          display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">
+                {{ log.user.display_name[0].upper() }}
+              </div>
+              <span class="small">{{ log.user.display_name }}</span>
+            </div>
+            {% else %}
+            <span class="text-muted small">sistema</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="text-center text-muted py-4">
+            <i class="bi bi-inbox d-block fs-3 mb-2 opacity-50"></i>
+            Nenhum registro encontrado.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# PAGINAÇÃO #}
+{% if pagination.pages > 1 %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.audit_log', page=pagination.prev_num,
+         date_from=date_from, date_to=date_to, action=action_filter, username=username_filter) }}">
+        <i class="bi bi-chevron-left"></i>
+      </a>
+    </li>
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if p %}
+      <li class="page-item {% if p == pagination.page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('admin.audit_log', page=p,
+           date_from=date_from, date_to=date_to, action=action_filter, username=username_filter) }}">{{ p }}</a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.audit_log', page=pagination.next_num,
+         date_from=date_from, date_to=date_to, action=action_filter, username=username_filter) }}">
+        <i class="bi bi-chevron-right"></i>
+      </a>
+    </li>
+  </ul>
+  <p class="text-center text-muted small">
+    Página {{ pagination.page }} de {{ pagination.pages }} · {{ pagination.total }} registros
+  </p>
+</nav>
+{% endif %}
+{% endblock %}

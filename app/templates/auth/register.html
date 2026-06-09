@@ -2,39 +2,64 @@
 {% block title %}Cadastro – CFO Chess{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5">
+<div class="row justify-content-center align-items-center" style="min-height:60vh">
+  <div class="col-sm-10 col-md-6 col-lg-4">
+
+    <div class="text-center mb-4">
+      <div style="font-size:3.5rem;line-height:1">♟</div>
+      <h1 class="fw-bold mt-2 mb-0" style="color:var(--navy)">CFO Chess</h1>
+      <p class="text-muted small">Campeonatos de Xadrez</p>
+    </div>
+
     <div class="card shadow-sm">
-      <div class="card-header bg-dark text-white text-center py-3">
-        <h4 class="mb-0">♟ CFO Chess — Cadastro</h4>
-      </div>
       <div class="card-body p-4">
+        <h5 class="fw-bold mb-4 text-center" style="color:var(--navy)">Criar conta</h5>
         <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
           <div class="mb-3">
-            <label class="form-label">Nome </label>
-            <input type="text" name="name" class="form-control" autofocus maxlength="120" />
+            <label class="form-label">Nome de exibição <span class="text-muted small">(opcional)</span></label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+              <input type="text" name="name" class="form-control" autofocus maxlength="120"
+                     placeholder="Como você quer ser chamado" />
+            </div>
+            <div class="form-text">Aparece no lugar do username para os outros jogadores.</div>
           </div>
           <div class="mb-3">
             <label class="form-label">Username <span class="text-muted small">(para login)</span></label>
-            <input type="text" name="username" class="form-control" required
-                   pattern="[a-zA-Z0-9_]+" minlength="3" />
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-at"></i></span>
+              <input type="text" name="username" class="form-control" required
+                     pattern="[a-zA-Z0-9_]+" minlength="3"
+                     placeholder="Ex: joao_silva" autocomplete="username" />
+            </div>
             <div class="form-text">Apenas letras, números e _. Mínimo 3 caracteres.</div>
           </div>
           <div class="mb-3">
             <label class="form-label">Senha</label>
-            <input type="password" name="password" class="form-control" required minlength="6" />
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" class="form-control" required minlength="6"
+                     placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+            </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Confirmar Senha</label>
-            <input type="password" name="confirm" class="form-control" required />
+          <div class="mb-4">
+            <label class="form-label">Confirmar senha</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" name="confirm" class="form-control" required
+                     placeholder="Repita a senha" autocomplete="new-password" />
+            </div>
           </div>
-          <button type="submit" class="btn btn-dark w-100">Cadastrar</button>
+          <button type="submit" class="btn btn-chess w-100">
+            <i class="bi bi-person-plus me-2"></i>Criar Conta
+          </button>
         </form>
       </div>
-      <div class="card-footer text-center text-muted py-3">
-        Já tem conta? <a href="{{ url_for('auth.login') }}">Faça login</a>
+      <div class="card-footer text-center text-muted py-3 small">
+        Já tem conta? <a href="{{ url_for('auth.login') }}" class="text-decoration-none fw-semibold">Fazer login</a>
       </div>
     </div>
+
   </div>
 </div>
 {% endblock %}

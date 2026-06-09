@@ -27,14 +27,32 @@ def admin_required(f):
 @admin_required
 def dashboard():
     championships = Championship.query.order_by(Championship.created_at.desc()).all()
-    users_count = User.query.count()
-    inconsistent = Match.query.filter_by(status='inconsistent').all()
-    recent_logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(20).all()
+    inconsistent_matches = Match.query.filter_by(status='inconsistent').all()
+    recent_audit = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(15).all()
+
+    # Stats
+    active_matches_count = Match.query.filter(
+        Match.status.in_(['pending', 'awaiting_confirmation', 'inconsistent'])
+    ).count()
+    stats = {
+        'users': User.query.count(),
+        'championships': len(championships),
+        'active_matches': active_matches_count,
+        'inconsistencies': len(inconsistent_matches),
+    }
+
+    # Admin's own pending matches (if admin also plays)
+    my_pending = Match.query.filter(
+        ((Match.player1_id == current_user.id) | (Match.player2_id == current_user.id)),
+        Match.status.in_(['pending', 'awaiting_confirmation', 'inconsistent'])
+    ).all()
+
     return render_template('admin/dashboard.html',
                            championships=championships,
-                           users_count=users_count,
-                           inconsistent=inconsistent,
-                           recent_logs=recent_logs)
+                           stats=stats,
+                           inconsistent_matches=inconsistent_matches,
+                           my_pending_matches=my_pending,
+                           recent_audit=recent_audit)
 
 
 # ---------------------------------------------------------------------------
@@ -79,34 +97,118 @@ def toggle_active(uid):
 
 
 # ---------------------------------------------------------------------------
+# User edit
+# ---------------------------------------------------------------------------
+
+@admin_bp.route('/users/<int:uid>/edit', methods=['POST'])
+@admin_required
+def edit_user(uid):
+    import re
+    user = User.query.get_or_404(uid)
+    name = request.form.get('name', '').strip()
+    username = request.form.get('username', '').strip()
+    role = request.form.get('role', '')
+    new_pw = request.form.get('new_password', '').strip()
+
+    if name:
+        user.name = name
+
+    if username and username != user.username:
+        if not re.match(r'^[a-zA-Z0-9_]+$', username) or len(username) < 3:
+            flash('Username inválido.', 'danger')
+            return redirect(url_for('admin.users'))
+        if User.query.filter_by(username=username).first():
+            flash('Username já em uso.', 'danger')
+            return redirect(url_for('admin.users'))
+        user.username = username
+
+    if role in ('admin', 'player') and user.id != current_user.id:
+        user.role = role
+
+    if new_pw:
+        if len(new_pw) < 6:
+            flash('Senha deve ter ao menos 6 caracteres.', 'danger')
+            return redirect(url_for('admin.users'))
+        user.set_password(new_pw)
+
+    db.session.commit()
+    audit('edit_user', f'Admin editou user {uid}', user_id=current_user.id)
+    db.session.commit()
+    flash(f'Usuário {user.display_name} atualizado.', 'success')
+    return redirect(url_for('admin.users'))
+
+
+# ---------------------------------------------------------------------------
+# Audit log
+# ---------------------------------------------------------------------------
+
+@admin_bp.route('/audit')
+@admin_required
+def audit_log():
+    from datetime import datetime as dt
+    page = request.args.get('page', 1, type=int)
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    action_filter = request.args.get('action', '')
+    username_filter = request.args.get('username', '')
+
+    q = AuditLog.query.order_by(AuditLog.timestamp.desc())
+
+    if date_from:
+        try:
+            q = q.filter(AuditLog.timestamp >= dt.strptime(date_from, '%Y-%m-%d'))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            from datetime import timedelta
+            q = q.filter(AuditLog.timestamp < dt.strptime(date_to, '%Y-%m-%d') + timedelta(days=1))
+        except ValueError:
+            pass
+    if action_filter:
+        q = q.filter(AuditLog.action == action_filter)
+    if username_filter:
+        q = q.join(User, AuditLog.user_id == User.id, isouter=True)\
+             .filter(User.username.ilike(f'%{username_filter}%'))
+
+    pagination = q.paginate(page=page, per_page=50, error_out=False)
+    all_actions = [r[0] for r in db.session.query(AuditLog.action).distinct().all()]
+
+    return render_template('admin/audit.html',
+                           pagination=pagination,
+                           all_actions=all_actions,
+                           date_from=date_from, date_to=date_to,
+                           action_filter=action_filter,
+                           username_filter=username_filter)
+
+
+# ---------------------------------------------------------------------------
 # Championship CRUD
 # ---------------------------------------------------------------------------
 
-@admin_bp.route('/championship/create', methods=['GET', 'POST'])
+@admin_bp.route('/championship/create', methods=['POST'])
 @admin_required
 def championship_create():
-    if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        description = request.form.get('description', '').strip()
-        fmt = request.form.get('format', '')
-        block = bool(request.form.get('block_on_inconsistency'))
+    name = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+    fmt = request.form.get('format', '')
+    block = bool(request.form.get('block_on_inconsistency'))
 
-        if not name or fmt not in ('elimination', 'round_robin'):
-            flash('Preencha todos os campos obrigatórios.', 'danger')
-            return render_template('admin/championship_form.html')
+    if not name or fmt not in ('elimination', 'round_robin'):
+        flash('Preencha todos os campos obrigatórios.', 'danger')
+        return redirect(url_for('championship.list_championships'))
 
-        c = Championship(
-            name=name, description=description,
-            format=fmt, created_by=current_user.id,
-            block_on_inconsistency=block,
-        )
-        db.session.add(c)
-        db.session.commit()
-        audit('championship_create', f'#{c.id} {name}', user_id=current_user.id)
-        db.session.commit()
-        flash('Campeonato criado!', 'success')
-        return redirect(url_for('admin.championship_detail', cid=c.id))
-    return render_template('admin/championship_form.html')
+    c = Championship(
+        name=name, description=description,
+        format=fmt, created_by=current_user.id,
+        block_on_inconsistency=block,
+    )
+    db.session.add(c)
+    db.session.commit()
+    audit('championship_create', f'#{c.id} {name}', user_id=current_user.id)
+    db.session.commit()
+    flash(f'Campeonato "{name}" criado!', 'success')
+    return redirect(url_for('admin.championship_detail', cid=c.id))
 
 
 @admin_bp.route('/championship/<int:cid>')

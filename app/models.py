@@ -140,8 +140,12 @@ class Match(db.Model):
     final_result = db.Column(db.String(20))
 
     is_bye = db.Column(db.Boolean, default=False)
+    invite_link = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime)
+
+    messages = db.relationship('MatchMessage', backref='match', lazy='dynamic',
+                               order_by='MatchMessage.created_at')
 
     player1 = db.relationship('User', foreign_keys=[player1_id], backref='matches_as_p1')
     player2 = db.relationship('User', foreign_keys=[player2_id], backref='matches_as_p2')
@@ -213,6 +217,30 @@ class Match(db.Model):
 
     def __repr__(self):
         return f'<Match {self.id} R{self.round}>'
+
+
+class MatchMessage(db.Model):
+    __tablename__ = 'match_messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('matches.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    message = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    author = db.relationship('User', foreign_keys=[user_id])
+
+    def to_dict(self, viewer_id):
+        return {
+            'id': self.id,
+            'user': self.author.display_name,
+            'text': self.message,
+            'mine': self.user_id == viewer_id,
+            'ts': self.created_at.strftime('%d/%m %H:%M'),
+        }
+
+    def __repr__(self):
+        return f'<MatchMessage {self.id}>'
 
 
 class AuditLog(db.Model):

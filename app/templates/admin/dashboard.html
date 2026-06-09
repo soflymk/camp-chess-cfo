@@ -2,126 +2,252 @@
 {% block title %}Dashboard Admin – CFO Chess{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2><i class="bi bi-speedometer2"></i> Dashboard Admin</h2>
-  <a href="{{ url_for('admin.championship_create') }}" class="btn btn-dark">
-    <i class="bi bi-plus-lg"></i> Novo Campeonato
-  </a>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h2 class="mb-0 fw-bold" style="color:var(--navy)">
+      Olá, {{ current_user.display_name }}! <span style="color:var(--amber)">♟</span>
+    </h2>
+    <p class="text-muted mb-0 small">Painel de administração · CFO Chess</p>
+  </div>
 </div>
 
-<!-- Stats -->
+{# ── STATS ── #}
 <div class="row g-3 mb-4">
-  <div class="col-sm-4">
-    <div class="card text-center border-0 bg-dark text-white">
-      <div class="card-body">
-        <div class="fs-1 fw-bold">{{ championships|length }}</div>
-        <div class="text-muted">Campeonatos</div>
-      </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-number stat-wins">{{ stats.users }}</div>
+      <div class="stat-label">Usuários</div>
     </div>
   </div>
-  <div class="col-sm-4">
-    <div class="card text-center border-0 bg-secondary text-white">
-      <div class="card-body">
-        <div class="fs-1 fw-bold">{{ users_count }}</div>
-        <div class="text-muted">Usuários</div>
-      </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-number stat-draws">{{ stats.championships }}</div>
+      <div class="stat-label">Campeonatos</div>
     </div>
   </div>
-  <div class="col-sm-4">
-    <div class="card text-center border-0 {% if inconsistent %}bg-danger{% else %}bg-success{% endif %} text-white">
-      <div class="card-body">
-        <div class="fs-1 fw-bold">{{ inconsistent|length }}</div>
-        <div>Inconsistências</div>
-      </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-number stat-total">{{ stats.active_matches }}</div>
+      <div class="stat-label">Partidas Ativas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-number stat-losses">{{ stats.inconsistencies }}</div>
+      <div class="stat-label">Inconsistências</div>
     </div>
   </div>
 </div>
 
-<!-- Inconsistency alerts -->
-{% if inconsistent %}
-<div class="alert alert-danger">
-  <h5><i class="bi bi-exclamation-triangle-fill"></i> Partidas com resultado inconsistente</h5>
-  <ul class="mb-0">
-    {% for m in inconsistent %}
-    <li>
-      <strong>Campeonato #{{ m.championship_id }}</strong> –
-      {{ m.player1.display_name if m.player1 else 'BYE' }} vs
-      {{ m.player2.display_name if m.player2 else 'BYE' }}
-      (R{{ m.round }}) –
-      P1 relatou: <em>{{ m.player1_reported or '–' }}</em>,
-      P2 relatou: <em>{{ m.player2_reported or '–' }}</em>
-      <a href="{{ url_for('admin.championship_detail', cid=m.championship_id) }}" class="ms-2 btn btn-sm btn-outline-danger py-0">
-        Resolver
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
-</div>
-{% endif %}
+<div class="row g-4">
 
-<!-- Championships table -->
-<div class="card mb-4">
-  <div class="card-header fw-semibold"><i class="bi bi-trophy"></i> Campeonatos</div>
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
-      <thead class="table-dark">
-        <tr>
-          <th>#</th><th>Nome</th><th>Formato</th><th>Status</th><th>Participantes</th><th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for c in championships %}
-        <tr>
-          <td>{{ c.id }}</td>
-          <td>{{ c.name }}</td>
-          <td>
-            {% if c.format == 'elimination' %}
-              <span class="badge bg-primary">Eliminatório</span>
-            {% else %}
-              <span class="badge bg-info text-dark">Pontos Corridos</span>
-            {% endif %}
-          </td>
-          <td>
-            {% if c.status == 'draft' %}<span class="badge bg-secondary">Rascunho</span>
-            {% elif c.status == 'active' %}<span class="badge bg-success">Ativo</span>
-            {% else %}<span class="badge bg-dark">Finalizado</span>{% endif %}
-          </td>
-          <td>{{ c.participants.count() }}</td>
-          <td>
-            <a href="{{ url_for('admin.championship_detail', cid=c.id) }}" class="btn btn-sm btn-outline-dark">
-              <i class="bi bi-gear"></i> Gerenciar
-            </a>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="6" class="text-center text-muted py-3">Nenhum campeonato criado.</td></tr>
+  {# ── INCONSISTÊNCIAS ── #}
+  {% if inconsistent_matches %}
+  <div class="col-12">
+    <div class="card" style="border-left:4px solid var(--error)!important">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+        <span class="fw-semibold">Resultado Inconsistente – Ação Necessária</span>
+        <span class="badge bg-danger ms-auto">{{ inconsistent_matches|length }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Campeonato</th><th>#</th><th>Jogador 1</th><th>Relato</th><th>Jogador 2</th><th>Relato</th><th></th></tr></thead>
+          <tbody>
+            {% for m in inconsistent_matches %}
+            <tr>
+              <td data-label="Campeonato" class="small">{{ m.championship.name }}</td>
+              <td data-label="#">{{ m.id }}</td>
+              <td data-label="J1"><strong>{{ m.player1.display_name if m.player1 else '–' }}</strong></td>
+              <td data-label="Relato 1">
+                {% if m.player1_reported %}
+                  <span class="status-badge status-{{ 'completed' if m.player1_reported=='win' else ('pending' if m.player1_reported=='draw' else 'inconsistent') }}">
+                    {{ {'win':'Vitória','loss':'Derrota','draw':'Empate'}[m.player1_reported] }}
+                  </span>
+                {% else %}–{% endif %}
+              </td>
+              <td data-label="J2"><strong>{{ m.player2.display_name if m.player2 else '–' }}</strong></td>
+              <td data-label="Relato 2">
+                {% if m.player2_reported %}
+                  <span class="status-badge status-{{ 'completed' if m.player2_reported=='win' else ('pending' if m.player2_reported=='draw' else 'inconsistent') }}">
+                    {{ {'win':'Vitória','loss':'Derrota','draw':'Empate'}[m.player2_reported] }}
+                  </span>
+                {% else %}–{% endif %}
+              </td>
+              <td><a href="{{ url_for('match.detail', mid=m.id) }}" class="btn btn-navy btn-xs">Resolver</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── CAMPEONATOS ── #}
+  <div class="col-12 col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-trophy me-2" style="color:var(--amber)"></i>Campeonatos</span>
+        <button class="btn btn-chess btn-xs" data-bs-toggle="modal" data-bs-target="#createChampModal">
+          <i class="bi bi-plus-lg me-1"></i>Novo
+        </button>
+      </div>
+      {% if championships %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Nome</th><th>Formato</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for c in championships %}
+            <tr>
+              <td data-label="Nome" class="fw-semibold">{{ c.name }}</td>
+              <td data-label="Formato">
+                {% if c.format == 'elimination' %}<span class="format-badge format-elimination">🏆 Elim.</span>
+                {% else %}<span class="format-badge format-round-robin">📊 RR</span>{% endif %}
+              </td>
+              <td data-label="Status">
+                {% if c.status == 'draft' %}<span class="status-badge status-draft">Rascunho</span>
+                {% elif c.status == 'active' %}<span class="status-badge status-active">● Ativo</span>
+                {% else %}<span class="status-badge status-finished">Finalizado</span>{% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('admin.championship_detail', cid=c.id) }}" class="btn btn-navy btn-xs">
+                  <i class="bi bi-gear"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-center text-muted py-4">
+        <p class="mb-2">Nenhum campeonato criado.</p>
+        <button class="btn btn-chess btn-sm" data-bs-toggle="modal" data-bs-target="#createChampModal">
+          Criar primeiro campeonato
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── COLUNA DIREITA ── #}
+  <div class="col-12 col-lg-5">
+
+    {# Minhas partidas (se admin joga) #}
+    {% if my_pending_matches %}
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-controller" style="color:var(--amber)"></i>
+        <span>Minhas Partidas Pendentes</span>
+        <span class="badge rounded-pill ms-auto" style="background:var(--amber);color:var(--navy)">{{ my_pending_matches|length }}</span>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for m in my_pending_matches %}
+        {% set opp = m.player2 if m.player1_id == current_user.id else m.player1 %}
+        <a href="{{ url_for('match.detail', mid=m.id) }}" class="list-group-item list-group-item-action">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="fw-semibold">vs {{ opp.display_name if opp else 'BYE' }}</span>
+              <div class="text-muted" style="font-size:.75rem">{{ m.championship.name }} · R{{ m.round }}</div>
+            </div>
+            {% if m.status == 'inconsistent' %}<span class="status-badge status-inconsistent">⚠️</span>
+            {% elif m.status == 'awaiting_confirmation' %}<span class="status-badge status-awaiting">🕐</span>
+            {% else %}<span class="status-badge status-pending">⏳</span>{% endif %}
+          </div>
+        </a>
         {% endfor %}
-      </tbody>
-    </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Atividade recente #}
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-journal-text me-2" style="color:var(--amber)"></i>Atividade Recente</span>
+        <a href="{{ url_for('admin.audit_log') }}" class="text-decoration-none small text-muted">Ver tudo →</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for log in recent_audit %}
+        <div class="list-group-item py-2">
+          <div class="d-flex justify-content-between">
+            <span class="small fw-semibold">{{ log.action }}</span>
+            <span class="text-muted" style="font-size:.7rem">{{ log.created_at.strftime('%d/%m %H:%M') }}</span>
+          </div>
+          {% if log.detail %}
+          <div class="text-muted" style="font-size:.75rem">{{ log.detail[:80] }}</div>
+          {% endif %}
+          {% if log.user %}
+          <div class="text-muted" style="font-size:.7rem">por {{ log.user.display_name }}</div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="list-group-item text-center text-muted small py-3">Sem atividade recente.</div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
+
 </div>
 
-<!-- Audit log -->
-<div class="card">
-  <div class="card-header fw-semibold"><i class="bi bi-journal-text"></i> Log de Auditoria (últimas 20 ações)</div>
-  <div class="table-responsive">
-    <table class="table table-sm mb-0">
-      <thead class="table-dark">
-        <tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Detalhes</th></tr>
-      </thead>
-      <tbody>
-        {% for log in recent_logs %}
-        <tr>
-          <td class="text-nowrap text-muted small">{{ log.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
-          <td>{{ log.user.username if log.user else '–' }}</td>
-          <td><code>{{ log.action }}</code></td>
-          <td class="small">{{ log.details or '' }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="4" class="text-center text-muted py-2">Nenhum registro.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+{# MODAL CRIAR CAMPEONATO #}
+<div class="modal fade" id="createChampModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Novo Campeonato</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('admin.championship_create') }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nome *</label>
+            <input type="text" name="name" class="form-control" required maxlength="200"
+                   placeholder="Ex: CFO Chess Cup 2025" autofocus />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descrição</label>
+            <textarea name="description" class="form-control" rows="2"
+                      placeholder="Detalhes do campeonato..." maxlength="1000"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Formato *</label>
+            <div class="row g-3 format-card-group">
+              <div class="col-sm-6">
+                <div class="format-card card p-3" data-value="elimination">
+                  <div class="text-center">
+                    <div class="fs-2">🏆</div>
+                    <div class="fw-semibold mt-1">Eliminatório</div>
+                    <small class="text-muted">Chave mata-mata. Perdeu, saiu.</small>
+                    <input type="radio" name="format" value="elimination" class="d-none" required />
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="format-card card p-3" data-value="round_robin">
+                  <div class="text-center">
+                    <div class="fs-2">📊</div>
+                    <div class="fw-semibold mt-1">Pontos Corridos</div>
+                    <small class="text-muted">Todos contra todos. V=3, E=1, D=0.</small>
+                    <input type="radio" name="format" value="round_robin" class="d-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="block_on_inconsistency" id="blockCheckDash" checked />
+            <label class="form-check-label small" for="blockCheckDash">
+              Bloquear avanço automático se houver resultado inconsistente
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-chess"><i class="bi bi-check-lg me-1"></i>Criar Campeonato</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}

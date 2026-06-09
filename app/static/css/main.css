@@ -1,66 +1,559 @@
-/* ── CFO Chess – main.css ── */
+/* ═══════════════════════════════════════════════════════════
+   CFO Chess – main.css
+   ═══════════════════════════════════════════════════════════ */
+
+/* 1. DESIGN TOKENS
+────────────────────────────────────────────────────────── */
+:root {
+  --navy:        #1e293b;
+  --navy-mid:    #334155;
+  --navy-light:  #475569;
+  --bg:          #f1f5f9;
+  --surface:     #ffffff;
+  --border:      #e2e8f0;
+  --text:        #0f172a;
+  --muted:       #64748b;
+  --amber:       #f59e0b;
+  --amber-dk:    #d97706;
+  --amber-light: #fef3c7;
+  --success:     #16a34a;
+  --danger:      #dc2626;
+  --warning:     #ca8a04;
+  --info:        #0284c7;
+
+  --radius:      .625rem;
+  --radius-sm:   .375rem;
+  --shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:   0 4px 12px rgba(0,0,0,.1);
+  --shadow-lg:   0 8px 24px rgba(0,0,0,.12);
+  --transition:  .18s ease;
+}
+
+/* 2. BASE / LAYOUT STICKY FOOTER
+────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { height: 100%; }
 
 body {
-  background-color: #f5f5f5;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: .9375rem;
 }
 
-/* Navbar tweak */
+main.container {
+  flex: 1;
+  padding-top: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+/* 3. NAVBAR
+────────────────────────────────────────────────────────── */
+.navbar {
+  background: var(--navy) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  padding: .625rem 0;
+}
+
 .navbar-brand {
-  font-size: 1.3rem;
-  letter-spacing: .5px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #fff !important;
 }
 
-/* Cards */
+.navbar-brand .chess-icon {
+  color: var(--amber);
+  margin-right: .3rem;
+}
+
+.navbar .nav-link {
+  color: rgba(255,255,255,.8) !important;
+  font-size: .88rem;
+  padding: .4rem .75rem;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), color var(--transition);
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  background: rgba(255,255,255,.1);
+  color: #fff !important;
+}
+
+.navbar .dropdown-menu {
+  border: none;
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius);
+  min-width: 200px;
+}
+
+.navbar .dropdown-item {
+  font-size: .875rem;
+  padding: .5rem 1rem;
+  border-radius: var(--radius-sm);
+  margin: .1rem .3rem;
+  width: calc(100% - .6rem);
+}
+
+.navbar .dropdown-item:hover { background: var(--bg); }
+
+.navbar-badge {
+  background: var(--amber);
+  color: var(--navy);
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .15rem .4rem;
+  border-radius: 99px;
+  margin-left: .3rem;
+}
+
+/* 4. CARDS
+────────────────────────────────────────────────────────── */
 .card {
-  border-radius: .5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: box-shadow var(--transition), transform var(--transition);
 }
 
-/* Format selection cards */
-.format-card {
-  cursor: pointer;
-  transition: border-color .15s, background-color .15s;
-}
-.format-card:hover {
-  border-color: #333 !important;
-  background-color: #f8f9fa;
+.card:hover { box-shadow: var(--shadow-md); }
+
+.card-header {
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  padding: .875rem 1.25rem;
+  font-weight: 600;
 }
 
-/* Bracket */
-.bracket-container {
-  padding: 1rem 0;
+.card-header.dark {
+  background: var(--navy);
+  color: #fff;
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 
-.bracket-round {
-  min-width: 210px;
+.card-header.dark .text-muted { color: rgba(255,255,255,.6) !important; }
+
+/* 5. BOTÕES
+────────────────────────────────────────────────────────── */
+.btn {
+  border-radius: var(--radius-sm);
+  font-size: .875rem;
+  font-weight: 500;
+  transition: all var(--transition);
 }
+
+.btn-chess {
+  background: var(--amber);
+  color: var(--navy);
+  border: none;
+  font-weight: 600;
+}
+
+.btn-chess:hover {
+  background: var(--amber-dk);
+  color: var(--navy);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(245,158,11,.35);
+}
+
+.btn-navy {
+  background: var(--navy);
+  color: #fff;
+  border: none;
+}
+
+.btn-navy:hover {
+  background: var(--navy-mid);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-xs {
+  padding: .15rem .5rem;
+  font-size: .75rem;
+  line-height: 1.4;
+}
+
+/* 6. BADGES DE STATUS
+────────────────────────────────────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .75rem;
+  font-weight: 600;
+  padding: .25rem .6rem;
+  border-radius: 99px;
+  letter-spacing: .3px;
+}
+
+.status-draft       { background: #f1f5f9; color: var(--muted); }
+.status-active      { background: #dcfce7; color: #15803d; }
+.status-finished    { background: #f1f5f9; color: var(--navy); border: 1px solid var(--border); }
+.status-pending     { background: #fef9c3; color: var(--warning); }
+.status-awaiting    { background: #fff7ed; color: #ea580c; }
+.status-completed   { background: #dcfce7; color: #15803d; }
+.status-inconsistent{ background: #fee2e2; color: var(--danger); }
+.status-wo          { background: #fef3c7; color: var(--amber-dk); }
+.status-bye         { background: #f8fafc; color: var(--muted); }
+
+.format-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .75rem;
+  font-weight: 600;
+  padding: .2rem .55rem;
+  border-radius: 99px;
+}
+
+.format-elimination { background: #ede9fe; color: #6d28d9; }
+.format-round-robin { background: #e0f2fe; color: #0369a1; }
+
+/* 7. DASHBOARD STATS
+────────────────────────────────────────────────────────── */
+.stat-card {
+  text-align: center;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.stat-card .stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-card .stat-label {
+  font-size: .78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-top: .3rem;
+}
+
+.stat-wins   { color: var(--success); }
+.stat-draws  { color: var(--info); }
+.stat-losses { color: var(--danger); }
+.stat-total  { color: var(--navy); }
+
+/* 8. PRÓXIMA PARTIDA (destaque)
+────────────────────────────────────────────────────────── */
+.next-match-card {
+  border-left: 4px solid var(--amber) !important;
+  background: linear-gradient(135deg, #fffbeb 0%, var(--surface) 60%);
+}
+
+.next-match-card .opponent-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.vs-divider {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 9. CHAT
+────────────────────────────────────────────────────────── */
+.chat-box {
+  height: 320px;
+  overflow-y: auto;
+  padding: .75rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  scroll-behavior: smooth;
+}
+
+.chat-bubble {
+  max-width: 72%;
+  padding: .5rem .75rem;
+  border-radius: 1rem;
+  font-size: .875rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.chat-bubble-mine {
+  align-self: flex-end;
+  background: var(--amber);
+  color: var(--navy);
+  border-bottom-right-radius: .25rem;
+}
+
+.chat-bubble-other {
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-bottom-left-radius: .25rem;
+}
+
+.chat-meta {
+  font-size: .68rem;
+  color: var(--muted);
+  margin-top: .15rem;
+}
+
+.chat-meta-mine { text-align: right; }
+
+.chat-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted);
+  font-size: .875rem;
+  text-align: center;
+}
+
+/* 10. MATCH HUB TABS
+────────────────────────────────────────────────────────── */
+.nav-tabs .nav-link {
+  color: var(--muted);
+  border: none;
+  padding: .625rem 1rem;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+}
+
+.nav-tabs .nav-link:hover { color: var(--navy); background: none; }
+.nav-tabs .nav-link.active {
+  color: var(--navy);
+  border-bottom-color: var(--amber);
+  background: none;
+  font-weight: 600;
+}
+
+.nav-tabs { border-bottom: 1px solid var(--border); }
+
+/* 11. PLAYER VS PLAYER CARD
+────────────────────────────────────────────────────────── */
+.player-card {
+  text-align: center;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  transition: border-color var(--transition);
+}
+
+.player-card.winner { border-color: var(--amber); background: var(--amber-light); }
+.player-card.loser  { opacity: .6; }
+
+.player-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 auto .75rem;
+}
+
+.player-avatar.amber { background: var(--amber); color: var(--navy); }
+
+/* 12. BRACKET
+────────────────────────────────────────────────────────── */
+.bracket-container { padding: 1rem 0; overflow-x: auto; }
+
+.bracket-round { min-width: 210px; }
 
 .bracket-match {
-  border-radius: .4rem;
-  transition: box-shadow .15s;
-}
-.bracket-match:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,.15) !important;
+  border-radius: var(--radius-sm) !important;
+  transition: box-shadow var(--transition);
+  cursor: default;
 }
 
-/* Utility: extra small button */
-.btn-xs {
-  padding: .1rem .4rem;
+.bracket-match:hover { box-shadow: var(--shadow-md) !important; }
+
+/* 13. TABELA
+────────────────────────────────────────────────────────── */
+.table { font-size: .875rem; }
+.table thead th {
   font-size: .75rem;
-  border-radius: .25rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 2px solid var(--border);
+  background: transparent;
+  padding: .75rem 1rem;
 }
 
-/* Table striping tweak */
-.table > tbody > tr:hover {
-  background-color: rgba(0,0,0,.03);
+.table tbody td { padding: .75rem 1rem; vertical-align: middle; }
+.table tbody tr:hover { background: var(--bg); }
+.table-dark thead th { color: rgba(255,255,255,.8); background: var(--navy); }
+
+/* 14. MODAIS
+────────────────────────────────────────────────────────── */
+.modal-content {
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
 }
 
-/* Alert dismiss */
-.alert-dismissible .btn-close {
-  padding: .6rem;
+.modal-header {
+  background: var(--navy);
+  color: #fff;
+  border-radius: var(--radius) var(--radius) 0 0;
+  border-bottom: none;
+  padding: 1rem 1.25rem;
 }
 
-/* Footer */
+.modal-header .btn-close {
+  filter: invert(1);
+  opacity: .7;
+}
+
+.modal-header .btn-close:hover { opacity: 1; }
+
+.modal-body { padding: 1.5rem; }
+.modal-footer { border-top: 1px solid var(--border); padding: 1rem 1.5rem; }
+
+/* 15. FORMULÁRIOS
+────────────────────────────────────────────────────────── */
+.form-control, .form-select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .875rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+}
+
+.form-label { font-weight: 500; font-size: .875rem; margin-bottom: .35rem; }
+
+/* 16. INVITE LINK
+────────────────────────────────────────────────────────── */
+.invite-link-preview {
+  background: var(--amber-light);
+  border: 1px solid var(--amber);
+  border-radius: var(--radius-sm);
+  padding: .75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  word-break: break-all;
+}
+
+/* 17. FOOTER
+────────────────────────────────────────────────────────── */
 footer {
-  font-size: .85rem;
+  background: var(--navy);
+  color: rgba(255,255,255,.5);
+  text-align: center;
+  padding: 1.25rem 0;
+  font-size: .8125rem;
+  margin-top: auto;
+}
+
+footer a { color: var(--amber); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* 18. ALERTS / FLASH
+────────────────────────────────────────────────────────── */
+.alert {
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: .875rem;
+}
+
+.alert-success { background: #dcfce7; color: #15803d; }
+.alert-danger  { background: #fee2e2; color: #991b1b; }
+.alert-warning { background: #fef9c3; color: #854d0e; }
+.alert-info    { background: #e0f2fe; color: #075985; }
+
+/* 19. TOAST
+────────────────────────────────────────────────────────── */
+#toastContainer {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+/* 20. FORMAT CARDS (criar campeonato)
+────────────────────────────────────────────────────────── */
+.format-card {
+  cursor: pointer;
+  border: 2px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  transition: border-color var(--transition), background var(--transition);
+  user-select: none;
+}
+
+.format-card:hover { border-color: var(--amber-dk) !important; }
+.format-card.selected { border-color: var(--amber) !important; background: var(--amber-light) !important; }
+
+/* 21. CHAMPIONSHIP OVERVIEW CARD
+────────────────────────────────────────────────────────── */
+.championship-header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.championship-header .champ-name { font-size: 1.4rem; font-weight: 700; }
+
+/* 22. RESPONSIVO
+────────────────────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .stat-card .stat-number { font-size: 1.5rem; }
+  .next-match-card .opponent-name { font-size: 1rem; }
+  .chat-box { height: 240px; }
+  .player-card { padding: .75rem; }
+  .championship-header { padding: 1rem; }
+  .championship-header .champ-name { font-size: 1.1rem; }
+  .table thead { display: none; }
+  .table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5rem .75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: .75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .table tbody tr { display: block; margin-bottom: .75rem;
+    border: 1px solid var(--border); border-radius: var(--radius-sm); }
+}
+
+@media (max-width: 768px) {
+  .bracket-container { padding: .5rem 0; }
+  .modal-dialog { margin: .5rem; }
 }

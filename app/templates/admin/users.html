@@ -3,67 +3,128 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2><i class="bi bi-people"></i> Usuários</h2>
+  <h2 class="mb-0 fw-bold" style="color:var(--navy)"><i class="bi bi-people me-2" style="color:var(--amber)"></i>Usuários</h2>
+  <span class="text-muted small">{{ users|length }} usuário(s)</span>
 </div>
 
 <div class="card">
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-      <thead class="table-dark">
+    <table class="table mb-0">
+      <thead>
         <tr>
-          <th>#</th><th>Username</th><th>Email</th><th>Papel</th>
-          <th>Status</th><th>Cadastro</th><th>Ações</th>
+          <th>#</th><th>Nome</th><th>Username</th><th>Papel</th><th>Status</th><th>Cadastro</th><th>Ações</th>
         </tr>
       </thead>
       <tbody>
         {% for u in users %}
-        <tr class="{% if not u.is_active %}table-secondary{% endif %}">
-          <td class="text-muted small">{{ u.id }}</td>
-          <td>
-              <strong>{{ u.display_name }}</strong>
-              {% if u.name %}<div class="text-muted small">@{{ u.username }}</div>{% endif %}
-            </td>
-          <td class="text-muted small">{{ u.email }}</td>
-          <td>
-            {% if u.is_admin %}
-              <span class="badge bg-warning text-dark">Admin</span>
-            {% else %}
-              <span class="badge bg-secondary">Jogador</span>
-            {% endif %}
+        <tr class="{% if not u.is_active %}opacity-50{% endif %}">
+          <td data-label="#" class="text-muted small">{{ u.id }}</td>
+          <td data-label="Nome">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;
+                          display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0">
+                {{ u.display_name[0].upper() }}
+              </div>
+              <div>
+                <div class="fw-semibold">{{ u.display_name }}</div>
+                {% if u.name %}<div class="text-muted" style="font-size:.75rem">@{{ u.username }}</div>{% endif %}
+              </div>
+            </div>
           </td>
-          <td>
-            {% if u.is_active %}
-              <span class="badge bg-success">Ativo</span>
-            {% else %}
-              <span class="badge bg-danger">Inativo</span>
-            {% endif %}
+          <td data-label="Username"><code class="small">{{ u.username }}</code></td>
+          <td data-label="Papel">
+            {% if u.is_admin %}<span class="status-badge" style="background:#fef3c7;color:#92400e">⭐ Admin</span>
+            {% else %}<span class="status-badge status-draft">Jogador</span>{% endif %}
           </td>
-          <td class="text-muted small">{{ u.created_at.strftime('%d/%m/%Y') }}</td>
-          <td>
+          <td data-label="Status">
+            {% if u.is_active %}<span class="status-badge status-active">● Ativo</span>
+            {% else %}<span class="status-badge status-inconsistent">● Inativo</span>{% endif %}
+          </td>
+          <td data-label="Cadastro" class="text-muted small">{{ u.created_at.strftime('%d/%m/%Y') }}</td>
+          <td data-label="Ações">
             {% if u.id != current_user.id %}
-            <div class="d-flex gap-1">
-              <form method="POST" action="{{ url_for('admin.toggle_role', uid=u.id) }}">
-                <button class="btn btn-sm btn-outline-warning py-0" title="Alternar papel">
-                  <i class="bi bi-arrow-repeat"></i>
-                  {{ 'Tornar Jogador' if u.is_admin else 'Tornar Admin' }}
-                </button>
-              </form>
-              <form method="POST" action="{{ url_for('admin.toggle_active', uid=u.id) }}">
-                <button class="btn btn-sm btn-outline-{{ 'danger' if u.is_active else 'success' }} py-0">
-                  {{ 'Desativar' if u.is_active else 'Ativar' }}
+            <div class="d-flex gap-1 flex-wrap">
+              <button class="btn btn-navy btn-xs btn-edit-user"
+                      data-id="{{ u.id }}"
+                      data-name="{{ u.name or '' }}"
+                      data-username="{{ u.username }}"
+                      data-role="{{ u.role }}"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editUserModal">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <form method="POST" action="{{ url_for('admin.toggle_active', uid=u.id) }}" class="d-inline">
+                <button class="btn btn-xs {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+                        title="{{ 'Desativar' if u.is_active else 'Ativar' }}">
+                  <i class="bi bi-{% if u.is_active %}slash-circle{% else %}check-circle{% endif %}"></i>
                 </button>
               </form>
             </div>
             {% else %}
-              <span class="text-muted small">(você)</span>
+            <span class="text-muted small">você</span>
             {% endif %}
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="text-center text-muted py-3">Nenhum usuário.</td></tr>
+        <tr><td colspan="7" class="text-center text-muted py-4">Nenhum usuário.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+{# MODAL EDITAR USUÁRIO #}
+<div class="modal fade" id="editUserModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-gear me-2"></i>Editar Usuário</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" id="editUserForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nome de exibição</label>
+            <input type="text" name="name" id="editName" class="form-control" maxlength="120" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" id="editUsername" class="form-control"
+                   pattern="[a-zA-Z0-9_]+" minlength="3" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Papel</label>
+            <select name="role" id="editRole" class="form-select">
+              <option value="player">Jogador</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <hr />
+          <div class="mb-0">
+            <label class="form-label">Nova Senha <span class="text-muted small">(deixe em branco para manter)</span></label>
+            <input type="password" name="new_password" class="form-control" minlength="6"
+                   autocomplete="new-password" placeholder="Mínimo 6 caracteres" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-chess"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.btn-edit-user').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('editName').value     = btn.dataset.name;
+    document.getElementById('editUsername').value = btn.dataset.username;
+    document.getElementById('editRole').value     = btn.dataset.role;
+    document.getElementById('editUserForm').action = `/admin/users/${btn.dataset.id}/edit`;
+  });
+});
+</script>
 {% endblock %}

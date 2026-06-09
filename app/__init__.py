@@ -26,12 +26,14 @@ def create_app(config_name='default'):
     from .routes.player import player_bp
     from .routes.championship import championship_bp
     from .routes.match import match_bp
+    from .routes.profile import profile_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(player_bp, url_prefix='/player')
     app.register_blueprint(championship_bp, url_prefix='/championship')
     app.register_blueprint(match_bp, url_prefix='/match')
+    app.register_blueprint(profile_bp, url_prefix='/profile')
 
     with app.app_context():
         db.create_all()
