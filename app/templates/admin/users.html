@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Usuários – CFO Chess{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-people"></i> Usuários</h2>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th><th>Username</th><th>Email</th><th>Papel</th>
+          <th>Status</th><th>Cadastro</th><th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr class="{% if not u.is_active %}table-secondary{% endif %}">
+          <td class="text-muted small">{{ u.id }}</td>
+          <td>
+              <strong>{{ u.display_name }}</strong>
+              {% if u.name %}<div class="text-muted small">@{{ u.username }}</div>{% endif %}
+            </td>
+          <td class="text-muted small">{{ u.email }}</td>
+          <td>
+            {% if u.is_admin %}
+              <span class="badge bg-warning text-dark">Admin</span>
+            {% else %}
+              <span class="badge bg-secondary">Jogador</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_active %}
+              <span class="badge bg-success">Ativo</span>
+            {% else %}
+              <span class="badge bg-danger">Inativo</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ u.created_at.strftime('%d/%m/%Y') }}</td>
+          <td>
+            {% if u.id != current_user.id %}
+            <div class="d-flex gap-1">
+              <form method="POST" action="{{ url_for('admin.toggle_role', uid=u.id) }}">
+                <button class="btn btn-sm btn-outline-warning py-0" title="Alternar papel">
+                  <i class="bi bi-arrow-repeat"></i>
+                  {{ 'Tornar Jogador' if u.is_admin else 'Tornar Admin' }}
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.toggle_active', uid=u.id) }}">
+                <button class="btn btn-sm btn-outline-{{ 'danger' if u.is_active else 'success' }} py-0">
+                  {{ 'Desativar' if u.is_active else 'Ativar' }}
+                </button>
+              </form>
+            </div>
+            {% else %}
+              <span class="text-muted small">(você)</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-3">Nenhum usuário.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Novo Campeonato – CFO Chess{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Novo Campeonato</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('admin.championship_create') }}">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nome *</label>
+            <input type="text" name="name" class="form-control" required maxlength="200" autofocus />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Descrição</label>
+            <textarea name="description" class="form-control" rows="3" maxlength="1000"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Formato *</label>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="card format-card border-2 h-100" data-value="elimination">
+                  <div class="card-body text-center p-3">
+                    <div class="fs-2">🏆</div>
+                    <div class="fw-semibold">Eliminatório</div>
+                    <small class="text-muted">Chave, mata-mata. Perdeu, saiu.</small>
+                    <input type="radio" name="format" value="elimination" class="d-none" required />
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="card format-card border-2 h-100" data-value="round_robin">
+                  <div class="card-body text-center p-3">
+                    <div class="fs-2">📊</div>
+                    <div class="fw-semibold">Pontos Corridos</div>
+                    <small class="text-muted">Todos contra todos. V=3, E=1, D=0.</small>
+                    <input type="radio" name="format" value="round_robin" class="d-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mb-4 form-check">
+            <input type="checkbox" class="form-check-input" name="block_on_inconsistency"
+                   id="block" checked />
+            <label class="form-check-label" for="block">
+              Bloquear avanço automático se houver inconsistência
+            </label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-dark">
+              <i class="bi bi-check-lg"></i> Criar Campeonato
+            </button>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.format-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.format-card').forEach(c => {
+      c.classList.remove('border-dark', 'bg-light');
+    });
+    card.classList.add('border-dark', 'bg-light');
+    card.querySelector('input[type=radio]').checked = true;
+  });
+});
+</script>
+{% endblock %}

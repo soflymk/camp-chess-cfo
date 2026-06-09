@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}Classificação – {{ c.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h2 class="mb-1">{{ c.name }}</h2>
+    <span class="badge bg-info text-dark">Pontos Corridos</span>
+    <span class="badge {% if c.status == 'active' %}bg-success{% elif c.status == 'finished' %}bg-dark{% else %}bg-secondary{% endif %} ms-1">
+      {{ {'draft':'Rascunho','active':'Ativo','finished':'Finalizado'}[c.status] }}
+    </span>
+  </div>
+  {% if current_user.is_admin %}
+  <a href="{{ url_for('admin.championship_detail', cid=c.id) }}" class="btn btn-sm btn-outline-dark">
+    <i class="bi bi-gear"></i> Administrar
+  </a>
+  {% endif %}
+</div>
+
+{% if c.status == 'finished' and c.winner %}
+<div class="alert alert-warning text-center py-3">
+  <span class="fs-3">🏆</span>
+  <strong class="fs-5 ms-2">Campeão: {{ c.winner.display_name }}</strong>
+</div>
+{% endif %}
+
+<!-- Standings Table -->
+{% if table %}
+<div class="card mb-4">
+  <div class="card-header fw-semibold"><i class="bi bi-bar-chart"></i> Classificação Geral</div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th class="text-center">#</th>
+          <th>Jogador</th>
+          <th class="text-center">PJ</th>
+          <th class="text-center text-success">V</th>
+          <th class="text-center text-warning">E</th>
+          <th class="text-center text-danger">D</th>
+          <th class="text-center fw-bold">Pts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in table %}
+        <tr class="
+          {% if loop.index == 1 and c.status == 'finished' %}table-warning fw-bold
+          {% elif row.participant.is_disqualified %}table-danger
+          {% elif row.user.id == current_user.id %}table-primary
+          {% endif %}">
+          <td class="text-center">
+            {% if loop.index == 1 %}🥇
+            {% elif loop.index == 2 %}🥈
+            {% elif loop.index == 3 %}🥉
+            {% else %}{{ loop.index }}{% endif %}
+          </td>
+          <td>
+            {{ row.user.display_name }}
+            {% if row.participant.is_disqualified %}
+              <span class="badge bg-danger ms-1">DQ</span>
+            {% endif %}
+            {% if row.user.id == current_user.id %}
+              <span class="badge bg-primary ms-1">você</span>
+            {% endif %}
+          </td>
+          <td class="text-center">{{ row.played }}</td>
+          <td class="text-center text-success fw-semibold">{{ row.wins }}</td>
+          <td class="text-center text-warning">{{ row.draws }}</td>
+          <td class="text-center text-danger">{{ row.losses }}</td>
+          <td class="text-center fw-bold fs-5">{{ row.points }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer text-muted small">
+    V = Vitória (3 pts) &nbsp;|&nbsp; E = Empate (1 pt) &nbsp;|&nbsp; D = Derrota (0 pts)
+    &nbsp;|&nbsp; Desempate: confronto direto → vitórias
+  </div>
+</div>
+{% endif %}
+
+<!-- Rounds -->
+{% if rounds %}
+<div class="card">
+  <div class="card-header fw-semibold"><i class="bi bi-list-check"></i> Confrontos</div>
+  <div class="card-body p-0">
+    {% for round_num, matches in rounds.items()|sort %}
+    <div class="px-3 pt-3">
+      <h6 class="text-muted">Rodada {{ round_num }}</h6>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-3">
+          <thead class="table-light">
+            <tr><th>Jogadores</th><th>Status</th><th>Resultado</th>
+              {% if current_user.id in matches|map(attribute='player1_id')|list + matches|map(attribute='player2_id')|list %}
+              <th>Ação</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in matches %}
+            <tr class="{% if m.status == 'inconsistent' %}table-danger{% elif m.status == 'completed' %}table-success bg-opacity-25{% endif %}">
+              <td>
+                <strong>{{ m.player1.display_name if m.player1 else '?' }}</strong>
+                <span class="text-muted mx-1">vs</span>
+                <strong>{{ m.player2.display_name if m.player2 else '?' }}</strong>
+              </td>
+              <td>
+                {% if m.status == 'pending' %}<span class="badge bg-secondary">⏳ Pendente</span>
+                {% elif m.status == 'awaiting_confirmation' %}<span class="badge bg-warning text-dark">🕐 Aguardando</span>
+                {% elif m.status == 'completed' %}<span class="badge bg-success">✅ Concluída</span>
+                {% elif m.status == 'inconsistent' %}<span class="badge bg-danger">⚠️ Inconsistente</span>
+                {% elif m.status == 'wo' %}<span class="badge bg-warning text-dark">🚫 W.O.</span>
+                {% endif %}
+              </td>
+              <td class="small">
+                {% if m.final_result == 'player1_win' %}{{ m.player1.display_name }} venceu
+                {% elif m.final_result == 'player2_win' %}{{ m.player2.display_name }} venceu
+                {% elif m.final_result == 'draw' %}Empate
+                {% else %}–{% endif %}
+              </td>
+              {% if current_user.id in [m.player1_id, m.player2_id] and m.status in ('pending','awaiting_confirmation','inconsistent') %}
+              <td>
+                <a href="{{ url_for('match.detail', mid=m.id) }}" class="btn btn-sm btn-dark py-0">
+                  Registrar
+                </a>
+              </td>
+              {% elif current_user.id in [m.player1_id, m.player2_id] %}
+              <td></td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">O campeonato ainda não foi iniciado.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,66 @@
+/* ── CFO Chess – main.css ── */
+
+body {
+  background-color: #f5f5f5;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Navbar tweak */
+.navbar-brand {
+  font-size: 1.3rem;
+  letter-spacing: .5px;
+}
+
+/* Cards */
+.card {
+  border-radius: .5rem;
+}
+
+/* Format selection cards */
+.format-card {
+  cursor: pointer;
+  transition: border-color .15s, background-color .15s;
+}
+.format-card:hover {
+  border-color: #333 !important;
+  background-color: #f8f9fa;
+}
+
+/* Bracket */
+.bracket-container {
+  padding: 1rem 0;
+}
+
+.bracket-round {
+  min-width: 210px;
+}
+
+.bracket-match {
+  border-radius: .4rem;
+  transition: box-shadow .15s;
+}
+.bracket-match:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,.15) !important;
+}
+
+/* Utility: extra small button */
+.btn-xs {
+  padding: .1rem .4rem;
+  font-size: .75rem;
+  border-radius: .25rem;
+}
+
+/* Table striping tweak */
+.table > tbody > tr:hover {
+  background-color: rgba(0,0,0,.03);
+}
+
+/* Alert dismiss */
+.alert-dismissible .btn-close {
+  padding: .6rem;
+}
+
+/* Footer */
+footer {
+  font-size: .85rem;
+}

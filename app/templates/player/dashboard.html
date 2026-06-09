@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Meu Dashboard – CFO Chess{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-house"></i> Olá, {{ current_user.display_name }}!</h2>
+
+<!-- Pending matches -->
+<div class="card mb-4">
+  <div class="card-header fw-semibold d-flex align-items-center gap-2">
+    <i class="bi bi-clock-history"></i> Minhas Partidas Pendentes
+    {% if pending_matches %}
+      <span class="badge bg-danger">{{ pending_matches|length }}</span>
+    {% endif %}
+  </div>
+  <div class="card-body p-0">
+    {% if pending_matches %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Campeonato</th><th>Adversário</th><th>Rodada</th><th>Status</th><th>Ação</th></tr>
+        </thead>
+        <tbody>
+          {% for m in pending_matches %}
+          {% set opponent = m.player2 if m.player1_id == current_user.id else m.player1 %}
+          {% set my_report = m.player1_reported if m.player1_id == current_user.id else m.player2_reported %}
+          <tr class="{% if m.status == 'inconsistent' %}table-danger{% elif m.status == 'awaiting_confirmation' %}table-warning{% endif %}">
+            <td>{{ m.championship.name }}</td>
+            <td><strong>{{ opponent.display_name if opponent else 'BYE' }}</strong></td>
+            <td>R{{ m.round }}</td>
+            <td>
+              {% if m.status == 'pending' %}<span class="badge bg-secondary">⏳ Pendente</span>
+              {% elif m.status == 'awaiting_confirmation' %}<span class="badge bg-warning text-dark">🕐 Aguardando confirmação</span>
+              {% elif m.status == 'inconsistent' %}<span class="badge bg-danger">⚠️ Inconsistente</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('match.detail', mid=m.id) }}" class="btn btn-sm btn-dark">
+                {% if not my_report %}
+                  <i class="bi bi-pencil"></i> Registrar
+                {% else %}
+                  <i class="bi bi-eye"></i> Ver
+                {% endif %}
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">Nenhuma partida pendente. 🎉</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Active Championships -->
+{% if active_championships %}
+<div class="card mb-4">
+  <div class="card-header fw-semibold"><i class="bi bi-trophy"></i> Campeonatos Ativos</div>
+  <div class="list-group list-group-flush">
+    {% for c in active_championships %}
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong>{{ c.name }}</strong>
+        <span class="badge {% if c.format == 'elimination' %}bg-primary{% else %}bg-info text-dark{% endif %} ms-2">
+          {{ 'Eliminatório' if c.format == 'elimination' else 'Pontos Corridos' }}
+        </span>
+      </div>
+      {% if c.format == 'elimination' %}
+        <a href="{{ url_for('championship.bracket', cid=c.id) }}" class="btn btn-sm btn-outline-primary">Ver Chave</a>
+      {% else %}
+        <a href="{{ url_for('championship.standings', cid=c.id) }}" class="btn btn-sm btn-outline-info">Ver Tabela</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Match History -->
+<div class="card">
+  <div class="card-header fw-semibold"><i class="bi bi-clock"></i> Histórico de Partidas</div>
+  <div class="card-body p-0">
+    {% if past_matches %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Campeonato</th><th>Adversário</th><th>Resultado</th><th>Data</th></tr>
+        </thead>
+        <tbody>
+          {% for m in past_matches %}
+          {% set opponent = m.player2 if m.player1_id == current_user.id else m.player1 %}
+          {% set result = m.player_result_label(current_user.id) %}
+          <tr>
+            <td>{{ m.championship.name }}</td>
+            <td>{{ opponent.display_name if opponent else 'BYE' }}</td>
+            <td>
+              {% if result == 'Vitória' %}<span class="badge bg-success">✅ Vitória</span>
+              {% elif result == 'Derrota' %}<span class="badge bg-danger">❌ Derrota</span>
+              {% elif m.status == 'wo' %}<span class="badge bg-warning text-dark">🚫 W.O.</span>
+              {% else %}<span class="badge bg-secondary">〰 Empate</span>{% endif %}
+            </td>
+            <td class="text-muted small">
+              {{ m.completed_at.strftime('%d/%m/%Y') if m.completed_at else '–' }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">Nenhuma partida concluída ainda.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

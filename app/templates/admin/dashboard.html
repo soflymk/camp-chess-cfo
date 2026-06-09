@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Admin – CFO Chess{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-speedometer2"></i> Dashboard Admin</h2>
+  <a href="{{ url_for('admin.championship_create') }}" class="btn btn-dark">
+    <i class="bi bi-plus-lg"></i> Novo Campeonato
+  </a>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card text-center border-0 bg-dark text-white">
+      <div class="card-body">
+        <div class="fs-1 fw-bold">{{ championships|length }}</div>
+        <div class="text-muted">Campeonatos</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card text-center border-0 bg-secondary text-white">
+      <div class="card-body">
+        <div class="fs-1 fw-bold">{{ users_count }}</div>
+        <div class="text-muted">Usuários</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card text-center border-0 {% if inconsistent %}bg-danger{% else %}bg-success{% endif %} text-white">
+      <div class="card-body">
+        <div class="fs-1 fw-bold">{{ inconsistent|length }}</div>
+        <div>Inconsistências</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Inconsistency alerts -->
+{% if inconsistent %}
+<div class="alert alert-danger">
+  <h5><i class="bi bi-exclamation-triangle-fill"></i> Partidas com resultado inconsistente</h5>
+  <ul class="mb-0">
+    {% for m in inconsistent %}
+    <li>
+      <strong>Campeonato #{{ m.championship_id }}</strong> –
+      {{ m.player1.display_name if m.player1 else 'BYE' }} vs
+      {{ m.player2.display_name if m.player2 else 'BYE' }}
+      (R{{ m.round }}) –
+      P1 relatou: <em>{{ m.player1_reported or '–' }}</em>,
+      P2 relatou: <em>{{ m.player2_reported or '–' }}</em>
+      <a href="{{ url_for('admin.championship_detail', cid=m.championship_id) }}" class="ms-2 btn btn-sm btn-outline-danger py-0">
+        Resolver
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<!-- Championships table -->
+<div class="card mb-4">
+  <div class="card-header fw-semibold"><i class="bi bi-trophy"></i> Campeonatos</div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th><th>Nome</th><th>Formato</th><th>Status</th><th>Participantes</th><th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in championships %}
+        <tr>
+          <td>{{ c.id }}</td>
+          <td>{{ c.name }}</td>
+          <td>
+            {% if c.format == 'elimination' %}
+              <span class="badge bg-primary">Eliminatório</span>
+            {% else %}
+              <span class="badge bg-info text-dark">Pontos Corridos</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.status == 'draft' %}<span class="badge bg-secondary">Rascunho</span>
+            {% elif c.status == 'active' %}<span class="badge bg-success">Ativo</span>
+            {% else %}<span class="badge bg-dark">Finalizado</span>{% endif %}
+          </td>
+          <td>{{ c.participants.count() }}</td>
+          <td>
+            <a href="{{ url_for('admin.championship_detail', cid=c.id) }}" class="btn btn-sm btn-outline-dark">
+              <i class="bi bi-gear"></i> Gerenciar
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-3">Nenhum campeonato criado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Audit log -->
+<div class="card">
+  <div class="card-header fw-semibold"><i class="bi bi-journal-text"></i> Log de Auditoria (últimas 20 ações)</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead class="table-dark">
+        <tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Detalhes</th></tr>
+      </thead>
+      <tbody>
+        {% for log in recent_logs %}
+        <tr>
+          <td class="text-nowrap text-muted small">{{ log.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>{{ log.user.username if log.user else '–' }}</td>
+          <td><code>{{ log.action }}</code></td>
+          <td class="small">{{ log.details or '' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-center text-muted py-2">Nenhum registro.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

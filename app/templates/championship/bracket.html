@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Chave – {{ c.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h2 class="mb-1">{{ c.name }}</h2>
+    <span class="badge bg-primary">Eliminatório</span>
+    <span class="badge {% if c.status == 'active' %}bg-success{% elif c.status == 'finished' %}bg-dark{% else %}bg-secondary{% endif %} ms-1">
+      {{ {'draft':'Rascunho','active':'Ativo','finished':'Finalizado'}[c.status] }}
+    </span>
+  </div>
+  {% if current_user.is_admin %}
+  <a href="{{ url_for('admin.championship_detail', cid=c.id) }}" class="btn btn-sm btn-outline-dark">
+    <i class="bi bi-gear"></i> Administrar
+  </a>
+  {% endif %}
+</div>
+
+{% if c.status == 'finished' and c.winner %}
+<div class="alert alert-warning text-center py-3">
+  <span class="fs-3">🏆</span>
+  <strong class="fs-5 ms-2">Campeão: {{ c.winner.display_name }}</strong>
+</div>
+{% endif %}
+
+{% if rounds %}
+<div class="bracket-container overflow-auto">
+  <div class="d-flex gap-4 align-items-start pb-3" style="min-width: max-content;">
+    {% for round_num in range(1, total_rounds + 1) %}
+    <div class="bracket-round">
+      <div class="text-center fw-semibold mb-3 text-muted small text-uppercase">
+        {{ round_names.get(round_num, 'Rodada ' ~ round_num) }}
+      </div>
+      <div class="d-flex flex-column gap-3"
+           style="margin-top: {{ ((2 ** (round_num - 1)) - 1) * 30 }}px;">
+        {% for m in rounds.get(round_num, []) %}
+        <div class="bracket-match card shadow-sm
+                    {% if m.status == 'completed' %}border-success
+                    {% elif m.status == 'inconsistent' %}border-danger
+                    {% elif m.status in ('bye','wo') %}border-warning
+                    {% else %}border-secondary{% endif %}"
+             style="width: 200px; margin-bottom: {{ ((2 ** (round_num - 1)) - 1) * 30 }}px;">
+          <div class="card-body p-2">
+            <!-- Player 1 -->
+            <div class="d-flex justify-content-between align-items-center py-1
+                        {% if m.final_result == 'player1_win' %}text-success fw-bold{% elif m.final_result == 'player2_win' %}text-muted{% endif %}">
+              <span class="small">
+                {% if m.player1 %}
+                  {{ m.player1.display_name }}
+                  {% if m.final_result == 'player1_win' %} 🏆{% endif %}
+                {% else %}
+                  <em class="text-muted">BYE</em>
+                {% endif %}
+              </span>
+            </div>
+            <hr class="my-1" />
+            <!-- Player 2 -->
+            <div class="d-flex justify-content-between align-items-center py-1
+                        {% if m.final_result == 'player2_win' %}text-success fw-bold{% elif m.final_result == 'player1_win' %}text-muted{% endif %}">
+              <span class="small">
+                {% if m.player2 %}
+                  {{ m.player2.display_name }}
+                  {% if m.final_result == 'player2_win' %} 🏆{% endif %}
+                {% else %}
+                  <em class="text-muted">BYE</em>
+                {% endif %}
+              </span>
+            </div>
+            <!-- Status badge -->
+            <div class="mt-1 text-center">
+              {% if m.status == 'pending' %}
+                <span class="badge bg-secondary" style="font-size:.65em">⏳ Pendente</span>
+              {% elif m.status == 'awaiting_confirmation' %}
+                <span class="badge bg-warning text-dark" style="font-size:.65em">🕐 Aguardando</span>
+              {% elif m.status == 'completed' %}
+                <span class="badge bg-success" style="font-size:.65em">✅ Concluída</span>
+              {% elif m.status == 'inconsistent' %}
+                <span class="badge bg-danger" style="font-size:.65em">⚠️ Inconsistente</span>
+              {% elif m.status in ('bye', 'wo') %}
+                <span class="badge bg-warning text-dark" style="font-size:.65em">{{ 'BYE' if m.status == 'bye' else 'W.O.' }}</span>
+              {% endif %}
+            </div>
+            <!-- Action for participant -->
+            {% if current_user.id in [m.player1_id, m.player2_id] and m.status in ('pending','awaiting_confirmation','inconsistent') %}
+            <div class="mt-1 text-center">
+              <a href="{{ url_for('match.detail', mid=m.id) }}" class="btn btn-xs btn-dark py-0 px-2" style="font-size:.75em">
+                Registrar resultado
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <p>O campeonato ainda não foi iniciado.</p>
+</div>
+{% endif %}
+{% endblock %}

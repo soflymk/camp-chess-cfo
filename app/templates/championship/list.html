@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Campeonatos – CFO Chess{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-trophy"></i> Campeonatos</h2>
+  {% if current_user.is_admin %}
+  <a href="{{ url_for('admin.championship_create') }}" class="btn btn-dark">
+    <i class="bi bi-plus-lg"></i> Novo
+  </a>
+  {% endif %}
+</div>
+
+{% if championships %}
+<div class="row g-3">
+  {% for c in championships %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="badge {% if c.format == 'elimination' %}bg-primary{% else %}bg-info text-dark{% endif %}">
+            {{ 'Eliminatório' if c.format == 'elimination' else 'Pontos Corridos' }}
+          </span>
+          <span class="badge {% if c.status == 'draft' %}bg-secondary{% elif c.status == 'active' %}bg-success{% else %}bg-dark{% endif %}">
+            {{ {'draft':'Rascunho','active':'Ativo','finished':'Finalizado'}[c.status] }}
+          </span>
+        </div>
+        <h5 class="card-title">{{ c.name }}</h5>
+        {% if c.description %}
+        <p class="card-text text-muted small">{{ c.description[:100] }}{% if c.description|length > 100 %}…{% endif %}</p>
+        {% endif %}
+        <div class="text-muted small mb-3">
+          <i class="bi bi-people"></i> {{ c.participants.count() }} participantes
+        </div>
+        {% if c.status == 'finished' and c.winner %}
+        <div class="alert alert-warning py-1 px-2 small mb-2">
+          🏆 Campeão: <strong>{{ c.winner.display_name }}</strong>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-footer bg-transparent d-flex gap-2">
+        {% if current_user.is_admin %}
+          <a href="{{ url_for('admin.championship_detail', cid=c.id) }}" class="btn btn-sm btn-dark">
+            <i class="bi bi-gear"></i> Gerenciar
+          </a>
+        {% endif %}
+        {% if c.status != 'draft' %}
+          {% if c.format == 'elimination' %}
+            <a href="{{ url_for('championship.bracket', cid=c.id) }}" class="btn btn-sm btn-outline-primary">Ver Chave</a>
+          {% else %}
+            <a href="{{ url_for('championship.standings', cid=c.id) }}" class="btn btn-sm btn-outline-info">Ver Tabela</a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <div class="fs-1">♟</div>
+  <p>Nenhum campeonato disponível.</p>
+</div>
+{% endif %}
+{% endblock %}

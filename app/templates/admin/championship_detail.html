@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block title %}{{ c.name }} – Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+  <div>
+    <h2 class="mb-1">{{ c.name }}</h2>
+    <span class="badge {% if c.format == 'elimination' %}bg-primary{% else %}bg-info text-dark{% endif %} me-1">
+      {{ 'Eliminatório' if c.format == 'elimination' else 'Pontos Corridos' }}
+    </span>
+    <span class="badge {% if c.status == 'draft' %}bg-secondary{% elif c.status == 'active' %}bg-success{% else %}bg-dark{% endif %}">
+      {{ {'draft':'Rascunho','active':'Ativo','finished':'Finalizado'}[c.status] }}
+    </span>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    {% if c.status == 'draft' %}
+      <form method="POST" action="{{ url_for('admin.championship_start', cid=c.id) }}"
+            onsubmit="return confirm('Iniciar campeonato? Os confrontos serão gerados.')">
+        <button class="btn btn-success"><i class="bi bi-play-fill"></i> Iniciar</button>
+      </form>
+    {% elif c.status == 'active' %}
+      <form method="POST" action="{{ url_for('admin.championship_finish', cid=c.id) }}"
+            onsubmit="return confirm('Finalizar campeonato manualmente?')">
+        <button class="btn btn-warning"><i class="bi bi-stop-fill"></i> Finalizar</button>
+      </form>
+    {% endif %}
+    {% if c.status != 'draft' %}
+      <form method="POST" action="{{ url_for('admin.championship_reset', cid=c.id) }}"
+            onsubmit="return confirm('Resetar campeonato? Todas as partidas serão excluídas.')">
+        <button class="btn btn-outline-danger btn-sm"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+      </form>
+    {% endif %}
+    {% if c.format == 'elimination' %}
+      <a href="{{ url_for('championship.bracket', cid=c.id) }}" class="btn btn-outline-primary btn-sm">Ver Chave</a>
+    {% else %}
+      <a href="{{ url_for('championship.standings', cid=c.id) }}" class="btn btn-outline-info btn-sm">Ver Tabela</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if c.description %}
+<p class="text-muted mb-3">{{ c.description }}</p>
+{% endif %}
+
+{% if c.status == 'finished' and c.winner %}
+<div class="alert alert-warning text-center">
+  <i class="bi bi-trophy-fill fs-4"></i>
+  <strong class="fs-5"> Campeão: {{ c.winner.display_name }}</strong>
+</div>
+{% endif %}
+
+<!-- Inconsistencies -->
+{% if inconsistent %}
+<div class="alert alert-danger">
+  <h6><i class="bi bi-exclamation-triangle-fill"></i> {{ inconsistent|length }} partida(s) inconsistente(s) — resolução necessária</h6>
+  {% for m in inconsistent %}
+  <div class="d-flex align-items-center gap-3 mt-2 p-2 bg-white rounded">
+    <span>R{{ m.round }} — <strong>{{ m.player1.display_name }}</strong> vs <strong>{{ m.player2.display_name }}</strong></span>
+    <span class="text-muted small">P1: {{ m.player1_reported }}, P2: {{ m.player2_reported }}</span>
+    <form method="POST" action="{{ url_for('admin.resolve_match', mid=m.id) }}" class="d-flex gap-1">
+      <select name="result" class="form-select form-select-sm" style="width:auto">
+        <option value="player1_win">{{ m.player1.display_name }} vence</option>
+        <option value="player2_win">{{ m.player2.display_name }} vence</option>
+        <option value="draw">Empate</option>
+      </select>
+      <button class="btn btn-sm btn-danger">Definir</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- Participants -->
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people"></i> Participantes ({{ c.participants.count() }})</span>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for p in c.participants.all() %}
+          <li class="list-group-item d-flex justify-content-between align-items-center
+                      {% if p.is_disqualified %}list-group-item-danger{% endif %}">
+            <span>
+              {{ p.user.display_name }}
+              {% if p.is_disqualified %}
+                <span class="badge bg-danger ms-1">DQ</span>
+                <small class="text-muted d-block" style="font-size:0.75em">{{ p.disqualification_reason }}</small>
+              {% endif %}
+            </span>
+            {% if c.status == 'draft' %}
+              <form method="POST" action="{{ url_for('admin.remove_participant', cid=c.id, uid=p.user_id) }}"
+                    onsubmit="return confirm('Remover participante?')">
+                <button class="btn btn-sm btn-outline-danger py-0"><i class="bi bi-x"></i></button>
+              </form>
+            {% elif c.status == 'active' and not p.is_disqualified %}
+              <button class="btn btn-sm btn-outline-danger py-0" data-bs-toggle="modal"
+                      data-bs-target="#dqModal{{ p.user_id }}">DQ</button>
+              <!-- Disqualify Modal -->
+              <div class="modal fade" id="dqModal{{ p.user_id }}" tabindex="-1">
+                <div class="modal-dialog modal-sm">
+                  <div class="modal-content">
+                    <div class="modal-header"><h6 class="modal-title">Desclassificar {{ p.user.display_name }}</h6></div>
+                    <div class="modal-body">
+                      <form method="POST" action="{{ url_for('admin.disqualify', cid=c.id, uid=p.user_id) }}">
+                        <input type="text" name="reason" class="form-control mb-2"
+                               placeholder="Motivo" maxlength="200" />
+                        <button class="btn btn-danger w-100">Confirmar</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          </li>
+          {% else %}
+          <li class="list-group-item text-muted text-center">Nenhum participante.</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% if c.status == 'draft' and available_users %}
+      <div class="card-footer">
+        <form method="POST" action="{{ url_for('admin.add_participant', cid=c.id) }}" class="d-flex gap-2">
+          <select name="user_id" class="form-select form-select-sm">
+            {% for u in available_users %}
+            <option value="{{ u.id }}">{{ u.display_name }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-sm btn-dark text-nowrap"><i class="bi bi-plus"></i> Add</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Matches -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header fw-semibold"><i class="bi bi-list-check"></i> Partidas</div>
+      {% if rounds %}
+        {% for round_num, matches in rounds.items()|sort %}
+        <div class="card-body pb-0 pt-3">
+          <h6 class="text-muted mb-2">Rodada {{ round_num }}</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-3">
+              <thead class="table-light">
+                <tr><th>Jogadores</th><th>Status</th><th>P1 relatou</th><th>P2 relatou</th><th>Resultado</th></tr>
+              </thead>
+              <tbody>
+                {% for m in matches %}
+                <tr class="{% if m.status == 'inconsistent' %}table-danger{% elif m.status == 'completed' %}table-success{% elif m.status == 'wo' %}table-warning{% endif %}">
+                  <td>
+                    {% if m.is_bye or m.status == 'bye' %}
+                      <span class="text-muted">BYE</span>
+                    {% else %}
+                      <strong>{{ m.player1.display_name if m.player1 else '?' }}</strong>
+                      <span class="text-muted mx-1">vs</span>
+                      <strong>{{ m.player2.display_name if m.player2 else '?' }}</strong>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% set status_map = {'pending':'⏳ Pendente','awaiting_confirmation':'🕐 Aguardando','completed':'✅ Concluída','inconsistent':'⚠️ Inconsistente','bye':'🔄 BYE','wo':'🚫 W.O.'} %}
+                    <span class="small">{{ status_map.get(m.status, m.status) }}</span>
+                  </td>
+                  <td class="small text-muted">{{ m.player1_reported or '–' }}</td>
+                  <td class="small text-muted">{{ m.player2_reported or '–' }}</td>
+                  <td class="small">
+                    {% if m.final_result %}
+                      {% if m.final_result == 'player1_win' %}{{ m.player1.display_name if m.player1 else '?' }} venceu
+                      {% elif m.final_result == 'player2_win' %}{{ m.player2.display_name if m.player2 else '?' }} venceu
+                      {% else %}Empate{% endif %}
+                    {% else %}–{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="card-body text-center text-muted">Nenhuma partida gerada ainda.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
