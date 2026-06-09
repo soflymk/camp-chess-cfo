@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Setup Inicial – CFO Chess{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow-sm border-warning">
+      <div class="card-header bg-warning text-dark text-center py-3">
+        <h4 class="mb-0">⚙️ Setup Inicial</h4>
+        <small>Criar primeiro administrador</small>
+      </div>
+      <div class="card-body p-4">
+        <div class="alert alert-info small">
+          Esta página só está disponível enquanto não houver nenhum usuário cadastrado.
+          Após criar o admin ela será desativada automaticamente.
+        </div>
+        <form method="POST" action="{{ url_for('auth.setup') }}" novalidate>
+          <div class="mb-3">
+            <label class="form-label">Nome</label>
+            <input type="text" name="name" class="form-control" autofocus maxlength="120" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Username <span class="text-muted small">(para login)</span></label>
+            <input type="text" name="username" class="form-control" required
+                   pattern="[a-zA-Z0-9_]+" minlength="3" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Senha</label>
+            <input type="password" name="password" class="form-control" required minlength="6" />
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Confirmar Senha</label>
+            <input type="password" name="confirm" class="form-control" required />
+          </div>
+          <button type="submit" class="btn btn-warning w-100 fw-bold">
+            Criar Administrador
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -78,6 +78,44 @@ def register():
     return render_template('auth/register.html')
 
 
+@auth_bp.route('/setup', methods=['GET', 'POST'])
+def setup():
+    """Cria o primeiro admin. Só funciona com banco vazio."""
+    if User.query.count() > 0:
+        flash('Setup já realizado.', 'info')
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        name     = request.form.get('name', '').strip()
+        password = request.form.get('password', '')
+        confirm  = request.form.get('confirm', '')
+
+        error = None
+        if not username or len(username) < 3:
+            error = 'Username deve ter ao menos 3 caracteres.'
+        elif not re.match(r'^[a-zA-Z0-9_]+$', username):
+            error = 'Username: apenas letras, números e _.'
+        elif len(password) < 6:
+            error = 'Senha deve ter ao menos 6 caracteres.'
+        elif password != confirm:
+            error = 'Senhas não conferem.'
+
+        if error:
+            flash(error, 'danger')
+        else:
+            admin = User(username=username, name=name or None, role='admin')
+            admin.set_password(password)
+            db.session.add(admin)
+            db.session.commit()
+            audit('setup', f'Primeiro admin criado: {username}', user_id=admin.id)
+            db.session.commit()
+            flash('Admin criado com sucesso! Faça login.', 'success')
+            return redirect(url_for('auth.login'))
+
+    return render_template('auth/setup.html')
+
+
 @auth_bp.route('/logout')
 @login_required
 def logout():
