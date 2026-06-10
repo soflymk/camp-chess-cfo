@@ -11,6 +11,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     name = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True, nullable=True)
+    chess_username = db.Column(db.String(100), nullable=True)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), default='player')  # admin | player
     is_active = db.Column(db.Boolean, default=True)

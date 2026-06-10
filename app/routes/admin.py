@@ -110,9 +110,11 @@ def edit_user(uid):
     username = request.form.get('username', '').strip()
     role = request.form.get('role', '')
     new_pw = request.form.get('new_password', '').strip()
+    chess_username = request.form.get('chess_username', '').strip()
 
     if name:
         user.name = name
+    user.chess_username = chess_username or None
 
     if username and username != user.username:
         if not re.match(r'^[a-zA-Z0-9_]+$', username) or len(username) < 3:

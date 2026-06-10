@@ -27,6 +27,7 @@ def create_app(config_name='default'):
     from .routes.championship import championship_bp
     from .routes.match import match_bp
     from .routes.profile import profile_bp
+    from .routes.api import api_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
@@ -34,6 +35,7 @@ def create_app(config_name='default'):
     app.register_blueprint(championship_bp, url_prefix='/championship')
     app.register_blueprint(match_bp, url_prefix='/match')
     app.register_blueprint(profile_bp, url_prefix='/profile')
+    app.register_blueprint(api_bp, url_prefix='/api')
 
     with app.app_context():
         db.create_all()

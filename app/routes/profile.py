@@ -17,6 +17,9 @@ def edit():
     if name:
         current_user.name = name
 
+    chess_username = request.form.get('chess_username', '').strip()
+    current_user.chess_username = chess_username or None
+
     if new_pw:
         if not current_user.check_password(current_pw):
             flash('Senha atual incorreta.', 'danger')

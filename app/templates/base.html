@@ -136,6 +136,18 @@
                    placeholder="{{ current_user.username }}" />
             <div class="form-text">Como seu nome aparece para os outros jogadores.</div>
           </div>
+          <div class="mb-3">
+            <label class="form-label">
+              <img src="https://www.chess.com/favicon.ico" width="14" class="me-1">Username no chess.com
+            </label>
+            <div class="input-group">
+              <span class="input-group-text text-muted small">chess.com/member/</span>
+              <input type="text" name="chess_username" class="form-control"
+                     value="{{ current_user.chess_username or '' }}" maxlength="100"
+                     placeholder="seu_username" autocomplete="off" />
+            </div>
+            <div class="form-text">Usado para verificar resultados automaticamente.</div>
+          </div>
           <hr />
           <p class="text-muted small mb-3">Para alterar a senha, preencha os campos abaixo. Deixe em branco para manter a atual.</p>
           <div class="mb-3">
@@ -162,8 +174,88 @@
 </div>
 {% endif %}
 
+{# ── MODAL GLOBAL DE RESULTADO ── #}
+{% if current_user.is_authenticated %}
+<div class="modal fade" id="resultModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil-fill me-2" style="color:var(--amber)"></i>Registrar Resultado</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        {# Jogadores #}
+        <div class="row align-items-center g-3 mb-3">
+          <div class="col text-center">
+            <div class="player-avatar amber mx-auto" id="rm-p1-avatar">?</div>
+            <div class="fw-semibold small mt-1" id="rm-p1-name"></div>
+            <a href="#" id="rm-p1-chess" class="d-none" target="_blank"
+               style="font-size:.72rem;color:var(--amber-dk)"></a>
+          </div>
+          <div class="col-auto vs-divider text-center">VS</div>
+          <div class="col text-center">
+            <div class="player-avatar mx-auto" id="rm-p2-avatar">?</div>
+            <div class="fw-semibold small mt-1" id="rm-p2-name"></div>
+            <a href="#" id="rm-p2-chess" class="d-none" target="_blank"
+               style="font-size:.72rem;color:var(--amber-dk)"></a>
+          </div>
+        </div>
+
+        {# Já informou #}
+        <div id="rm-already-reported" class="alert alert-info small py-2 d-none"></div>
+
+        {# Resultado #}
+        <p class="text-muted small mb-2 text-center">Como foi o resultado <strong>para você</strong>?</p>
+        <div class="d-flex gap-2 justify-content-center flex-wrap mb-3">
+          <div>
+            <input type="radio" class="btn-check" name="rm-result" id="rm-win" value="win" />
+            <label class="btn btn-outline-success px-3" for="rm-win">🏆 Ganhei</label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="rm-result" id="rm-draw" value="draw" />
+            <label class="btn btn-outline-warning px-3" for="rm-draw">〰 Empate</label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="rm-result" id="rm-loss" value="loss" />
+            <label class="btn btn-outline-danger px-3" for="rm-loss">❌ Perdi</label>
+          </div>
+        </div>
+
+        {# Verificar no chess.com #}
+        <div id="rm-chess-check" class="text-center d-none mb-1">
+          <button id="rm-chess-btn" class="btn btn-outline-secondary btn-sm"
+                  onclick="checkChessResult()" type="button">
+            <img src="https://www.chess.com/favicon.ico" width="14" class="me-1">Verificar no chess.com
+          </button>
+          <div id="rm-chess-status" class="small mt-1"></div>
+        </div>
+
+      </div>
+      <div class="modal-footer justify-content-between">
+        <a id="rm-detail-link" href="#" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-chat-dots me-1"></i>Chat / Detalhes
+        </a>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-chess" id="rm-submit" onclick="submitResult()">
+            <i class="bi bi-check-lg me-1"></i>Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 {% block scripts %}{% endblock %}
+{% if current_user.is_authenticated %}
+<script>
+  // Inicia heartbeat em todas as páginas autenticadas
+  document.addEventListener('DOMContentLoaded', function() { startHeartbeat(30000); });
+</script>
+{% endif %}
 </body>
 </html>

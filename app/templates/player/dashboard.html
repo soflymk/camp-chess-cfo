@@ -108,10 +108,16 @@
       </div>
     </div>
 
+    {% set my_report = next_match.player1_reported if next_match.player1_id == current_user.id else next_match.player2_reported %}
     <div class="d-flex gap-2 flex-wrap">
-      <a href="{{ url_for('match.detail', mid=next_match.id) }}" class="btn btn-chess btn-sm">
-        <i class="bi bi-pencil-fill me-1"></i>Registrar Resultado
-      </a>
+      <button class="btn btn-chess btn-sm" onclick="openResultModal(
+        {{ next_match.id }},
+        '{{ next_match.player1.display_name|replace("'","\\'")|safe if next_match.player1 else 'BYE' }}',
+        '{{ next_match.player1.chess_username or '' }}',
+        '{{ opp.display_name|replace("'","\\'")|safe if opp else 'BYE' }}',
+        '{{ opp.chess_username or '' if opp else '' }}',
+        '{{ my_report or '' }}'
+      )"><i class="bi bi-pencil-fill me-1"></i>Registrar Resultado</button>
       <a href="{{ url_for('match.detail', mid=next_match.id) }}#chat" class="btn btn-navy btn-sm">
         <i class="bi bi-chat-dots me-1"></i>Chat
       </a>

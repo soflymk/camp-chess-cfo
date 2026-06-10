@@ -49,6 +49,7 @@
                       data-name="{{ u.name or '' }}"
                       data-username="{{ u.username }}"
                       data-role="{{ u.role }}"
+                      data-chess="{{ u.chess_username or '' }}"
                       data-bs-toggle="modal"
                       data-bs-target="#editUserModal">
                 <i class="bi bi-pencil"></i>
@@ -99,6 +100,16 @@
               <option value="admin">Admin</option>
             </select>
           </div>
+          <div class="mb-3">
+            <label class="form-label">
+              <img src="https://www.chess.com/favicon.ico" width="14" class="me-1">Username no chess.com
+            </label>
+            <div class="input-group">
+              <span class="input-group-text text-muted small">chess.com/member/</span>
+              <input type="text" name="chess_username" id="editChessUsername" class="form-control"
+                     maxlength="100" placeholder="username" autocomplete="off" />
+            </div>
+          </div>
           <hr />
           <div class="mb-0">
             <label class="form-label">Nova Senha <span class="text-muted small">(deixe em branco para manter)</span></label>
@@ -120,10 +131,11 @@
 <script>
 document.querySelectorAll('.btn-edit-user').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.getElementById('editName').value     = btn.dataset.name;
-    document.getElementById('editUsername').value = btn.dataset.username;
-    document.getElementById('editRole').value     = btn.dataset.role;
-    document.getElementById('editUserForm').action = `/admin/users/${btn.dataset.id}/edit`;
+    document.getElementById('editName').value          = btn.dataset.name;
+    document.getElementById('editUsername').value      = btn.dataset.username;
+    document.getElementById('editRole').value          = btn.dataset.role;
+    document.getElementById('editChessUsername').value = btn.dataset.chess;
+    document.getElementById('editUserForm').action     = `/admin/users/${btn.dataset.id}/edit`;
   });
 });
 </script>
