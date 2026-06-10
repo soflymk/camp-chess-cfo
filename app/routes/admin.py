@@ -42,8 +42,9 @@ def dashboard():
     }
 
     # Admin's own pending matches (if admin also plays)
+    from sqlalchemy import or_
     my_pending = Match.query.filter(
-        ((Match.player1_id == current_user.id) | (Match.player2_id == current_user.id)),
+        or_(Match.player1_id == current_user.id, Match.player2_id == current_user.id),
         Match.status.in_(['pending', 'awaiting_confirmation', 'inconsistent'])
     ).all()
 
