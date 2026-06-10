@@ -106,10 +106,11 @@
     <div class="table-responsive">
       <table class="table table-sm align-middle mb-3">
         <thead>
-          <tr><th>Jogadores</th><th>Status</th><th>Resultado</th><th></th></tr>
+          <tr><th>Jogadores</th><th>Status</th><th>Resultado</th><th>Jogar Online</th><th></th></tr>
         </thead>
         <tbody>
           {% for m in matches %}
+          {% set opp_s = m.player2 if m.player1_id == current_user.id else m.player1 %}
           <tr>
             <td data-label="Jogadores">
               <strong {% if m.player1_id == current_user.id %}style="color:var(--navy)"{% endif %}>
@@ -134,10 +135,24 @@
               {% elif m.final_result == 'draw' %}〰 Empate
               {% else %}–{% endif %}
             </td>
+            <td data-label="Jogar Online">
+              {% if current_user.id in [m.player1_id, m.player2_id] and m.status in ('pending','awaiting_confirmation','inconsistent') %}
+                {% if opp_s and opp_s.chess_username %}
+                  <a href="https://www.chess.com/member/{{ opp_s.chess_username }}" target="_blank"
+                     class="btn btn-outline-secondary btn-xs"
+                     title="Abre o perfil do adversário no chess.com — clique em Challenge">
+                    <img src="https://www.chess.com/favicon.ico" width="12" class="me-1">Convidar
+                  </a>
+                {% else %}
+                  <span class="text-muted small" title="Adversário não configurou o username do chess.com">
+                    <i class="bi bi-slash-circle me-1"></i>Indisponível
+                  </span>
+                {% endif %}
+              {% else %}–{% endif %}
+            </td>
             <td>
               {% if current_user.id in [m.player1_id, m.player2_id] and m.status in ('pending','awaiting_confirmation','inconsistent') %}
               {% set my_report = m.player1_reported if m.player1_id == current_user.id else m.player2_reported %}
-              {% set opp_s = m.player2 if m.player1_id == current_user.id else m.player1 %}
               <button class="btn btn-chess btn-xs" onclick="openResultModal(
                 {{ m.id }},
                 '{{ m.player1.display_name|replace("'","\\'")|safe if m.player1 else 'BYE' }}',
