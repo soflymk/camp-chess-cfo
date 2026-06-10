@@ -253,8 +253,6 @@ class AuditLog(db.Model):
     ip_address = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship('User', foreign_keys=[user_id])
-
     @property
     def detail(self):
         """Alias para compatibilidade com templates."""
