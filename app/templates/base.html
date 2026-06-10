@@ -180,66 +180,100 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-pencil-fill me-2" style="color:var(--amber)"></i>Registrar Resultado</h5>
+        <h5 class="modal-title"><i class="bi bi-controller me-2" style="color:var(--amber)"></i>Partida</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body p-0">
 
-        {# Jogadores #}
-        <div class="row align-items-center g-3 mb-3">
+        {# ── JOGADORES ── #}
+        <div class="row align-items-center g-0 p-3 pb-2">
           <div class="col text-center">
             <div class="player-avatar amber mx-auto" id="rm-p1-avatar">?</div>
             <div class="fw-semibold small mt-1" id="rm-p1-name"></div>
             <a href="#" id="rm-p1-chess" class="d-none" target="_blank"
-               style="font-size:.72rem;color:var(--amber-dk)"></a>
+               style="font-size:.7rem;color:var(--amber-dk)">
+              <img src="https://www.chess.com/favicon.ico" width="10" class="me-1">ver perfil
+            </a>
           </div>
-          <div class="col-auto vs-divider text-center">VS</div>
+          <div class="col-auto vs-divider px-3">VS</div>
           <div class="col text-center">
             <div class="player-avatar mx-auto" id="rm-p2-avatar">?</div>
             <div class="fw-semibold small mt-1" id="rm-p2-name"></div>
             <a href="#" id="rm-p2-chess" class="d-none" target="_blank"
-               style="font-size:.72rem;color:var(--amber-dk)"></a>
+               style="font-size:.7rem;color:var(--amber-dk)">
+              <img src="https://www.chess.com/favicon.ico" width="10" class="me-1">ver perfil
+            </a>
           </div>
         </div>
 
-        {# Já informou #}
-        <div id="rm-already-reported" class="alert alert-info small py-2 d-none"></div>
+        {# ── JOGAR ONLINE ── #}
+        <div class="px-3 pb-2">
+          {# Link de convite automático #}
+          <div id="rm-play-section" class="d-none">
+            <a id="rm-play-link" href="#" target="_blank" class="btn btn-chess w-100 mb-1">
+              <img src="https://www.chess.com/favicon.ico" width="14" class="me-2">Desafiar no chess.com
+            </a>
+            <div class="text-muted text-center" style="font-size:.72rem">
+              Abre o perfil do adversário no chess.com — clique em <strong>Challenge</strong> para iniciar.
+            </div>
+          </div>
 
-        {# Resultado #}
-        <p class="text-muted small mb-2 text-center">Como foi o resultado <strong>para você</strong>?</p>
-        <div class="d-flex gap-2 justify-content-center flex-wrap mb-3">
-          <div>
-            <input type="radio" class="btn-check" name="rm-result" id="rm-win" value="win" />
-            <label class="btn btn-outline-success px-3" for="rm-win">🏆 Ganhei</label>
-          </div>
-          <div>
-            <input type="radio" class="btn-check" name="rm-result" id="rm-draw" value="draw" />
-            <label class="btn btn-outline-warning px-3" for="rm-draw">〰 Empate</label>
-          </div>
-          <div>
-            <input type="radio" class="btn-check" name="rm-result" id="rm-loss" value="loss" />
-            <label class="btn btn-outline-danger px-3" for="rm-loss">❌ Perdi</label>
+          {# Aviso: username não configurado #}
+          <div id="rm-no-chess" class="d-none">
+            <div class="alert alert-warning py-2 mb-0 small text-center">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              Configure seu <strong>username do chess.com</strong> para ativar o convite automático e a verificação de resultado.
+              <br>
+              <button type="button" class="btn btn-link btn-sm p-0 mt-1"
+                      data-bs-dismiss="modal"
+                      data-bs-toggle="modal" data-bs-target="#profileModal">
+                Configurar agora →
+              </button>
+            </div>
           </div>
         </div>
 
-        {# Verificar no chess.com #}
-        <div id="rm-chess-check" class="text-center d-none mb-1">
-          <button id="rm-chess-btn" class="btn btn-outline-secondary btn-sm"
-                  onclick="checkChessResult()" type="button">
-            <img src="https://www.chess.com/favicon.ico" width="14" class="me-1">Verificar no chess.com
-          </button>
-          <div id="rm-chess-status" class="small mt-1"></div>
+        <hr class="my-0" />
+
+        {# ── REGISTRAR RESULTADO ── #}
+        <div class="p-3">
+          <div id="rm-already-reported" class="alert alert-info small py-2 d-none mb-2"></div>
+
+          <p class="text-muted small mb-2 text-center">Como foi o resultado <strong>para você</strong>?</p>
+          <div class="d-flex gap-2 justify-content-center flex-wrap mb-3">
+            <div>
+              <input type="radio" class="btn-check" name="rm-result" id="rm-win" value="win" />
+              <label class="btn btn-outline-success px-3" for="rm-win">🏆 Ganhei</label>
+            </div>
+            <div>
+              <input type="radio" class="btn-check" name="rm-result" id="rm-draw" value="draw" />
+              <label class="btn btn-outline-warning px-3" for="rm-draw">〰 Empate</label>
+            </div>
+            <div>
+              <input type="radio" class="btn-check" name="rm-result" id="rm-loss" value="loss" />
+              <label class="btn btn-outline-danger px-3" for="rm-loss">❌ Perdi</label>
+            </div>
+          </div>
+
+          {# Verificação automática chess.com #}
+          <div id="rm-chess-check" class="text-center d-none">
+            <button id="rm-chess-btn" class="btn btn-outline-secondary btn-sm"
+                    onclick="checkChessResult()" type="button">
+              <img src="https://www.chess.com/favicon.ico" width="14" class="me-1">Verificar resultado no chess.com
+            </button>
+            <div id="rm-chess-status" class="small mt-1"></div>
+          </div>
         </div>
 
       </div>
       <div class="modal-footer justify-content-between">
         <a id="rm-detail-link" href="#" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-chat-dots me-1"></i>Chat / Detalhes
+          <i class="bi bi-chat-dots me-1"></i>Chat
         </a>
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-chess" id="rm-submit" onclick="submitResult()">
-            <i class="bi bi-check-lg me-1"></i>Confirmar
+            <i class="bi bi-check-lg me-1"></i>Confirmar Resultado
           </button>
         </div>
       </div>
@@ -253,7 +287,7 @@
 {% block scripts %}{% endblock %}
 {% if current_user.is_authenticated %}
 <script>
-  // Inicia heartbeat em todas as páginas autenticadas
+  var CURRENT_USER_CHESS = '{{ current_user.chess_username or '' }}';
   document.addEventListener('DOMContentLoaded', function() { startHeartbeat(30000); });
 </script>
 {% endif %}

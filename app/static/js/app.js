@@ -78,25 +78,49 @@ var _rmMatchId = null;
 var _rmP1Chess = null;
 var _rmP2Chess = null;
 
-function openResultModal(matchId, p1Name, p1Chess, p2Name, p2Chess, myReport) {
+// oppChess = chess_username do adversário (para link de convite)
+function openResultModal(matchId, p1Name, p1Chess, p2Name, p2Chess, myReport, oppChess) {
   _rmMatchId = matchId;
   _rmP1Chess = p1Chess;
   _rmP2Chess = p2Chess;
 
+  // Nomes e avatares
   _rmSetText('rm-p1-name', p1Name);
   _rmSetText('rm-p2-name', p2Name);
   _rmSetText('rm-p1-avatar', p1Name ? p1Name[0].toUpperCase() : '?');
   _rmSetText('rm-p2-avatar', p2Name ? p2Name[0].toUpperCase() : '?');
 
+  // Links de perfil chess.com
   _rmSetChessLink('rm-p1-chess', p1Chess);
   _rmSetChessLink('rm-p2-chess', p2Chess);
 
+  // ── Seção Jogar Online ──────────────────────────────────────────────────
+  var playSection = document.getElementById('rm-play-section');
+  var noChessEl   = document.getElementById('rm-no-chess');
+  var playLink    = document.getElementById('rm-play-link');
+  var myChess     = (typeof CURRENT_USER_CHESS !== 'undefined') ? CURRENT_USER_CHESS : '';
+
+  if (playSection) playSection.classList.add('d-none');
+  if (noChessEl)   noChessEl.classList.add('d-none');
+
+  if (oppChess) {
+    // Adversário tem username: mostrar link de convite
+    if (playLink) playLink.href = 'https://www.chess.com/member/' + oppChess;
+    if (playSection) playSection.classList.remove('d-none');
+  } else if (!myChess) {
+    // Nem eu nem adversário têm username: mostrar aviso
+    if (noChessEl) noChessEl.classList.remove('d-none');
+  }
+
+  // ── Verificar resultado ─────────────────────────────────────────────────
   var chessCheckEl = document.getElementById('rm-chess-check');
-  if (chessCheckEl) chessCheckEl.classList.toggle('d-none', !(p1Chess && p2Chess));
+  var canVerify = myChess && oppChess;
+  if (chessCheckEl) chessCheckEl.classList.toggle('d-none', !canVerify);
 
   var statusEl = document.getElementById('rm-chess-status');
   if (statusEl) { statusEl.textContent = ''; statusEl.removeAttribute('style'); }
 
+  // ── Resultado já informado ──────────────────────────────────────────────
   document.querySelectorAll('input[name="rm-result"]').forEach(function(r) { r.checked = false; });
   var alreadyEl = document.getElementById('rm-already-reported');
   if (myReport && alreadyEl) {

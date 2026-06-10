@@ -83,13 +83,15 @@
                 {% if current_user.id in [m.player1_id, m.player2_id] and m.status in ('pending','awaiting_confirmation','inconsistent') %}
                 {% set my_report = m.player1_reported if m.player1_id == current_user.id else m.player2_reported %}
                 <div class="mt-2 text-center">
+                  {% set opp_b = m.player2 if m.player1_id == current_user.id else m.player1 %}
                   <button class="btn btn-chess btn-xs" onclick="openResultModal(
                     {{ m.id }},
                     '{{ m.player1.display_name|replace("'","\\'")|safe if m.player1 else 'BYE' }}',
                     '{{ m.player1.chess_username or '' }}',
                     '{{ m.player2.display_name|replace("'","\\'")|safe if m.player2 else 'BYE' }}',
                     '{{ m.player2.chess_username or '' }}',
-                    '{{ my_report or '' }}'
+                    '{{ my_report or '' }}',
+                    '{{ opp_b.chess_username or '' if opp_b else '' }}'
                   )">⚔️ Resultado</button>
                 </div>
                 {% endif %}

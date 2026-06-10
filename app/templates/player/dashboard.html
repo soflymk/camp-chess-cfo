@@ -116,7 +116,8 @@
         '{{ next_match.player1.chess_username or '' }}',
         '{{ opp.display_name|replace("'","\\'")|safe if opp else 'BYE' }}',
         '{{ opp.chess_username or '' if opp else '' }}',
-        '{{ my_report or '' }}'
+        '{{ my_report or '' }}',
+        '{{ opp.chess_username or '' if opp else '' }}'
       )"><i class="bi bi-pencil-fill me-1"></i>Registrar Resultado</button>
       <a href="{{ url_for('match.detail', mid=next_match.id) }}#chat" class="btn btn-navy btn-sm">
         <i class="bi bi-chat-dots me-1"></i>Chat
